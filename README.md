@@ -1,8 +1,5 @@
 # DM42PGM - SwissMicros implementation of Free42 frontend 
 
-Read the README file for building instructions.
-
-
 # Architecture Overview
 ## Structure
 The DM Calculator Platform (DMCP) is the OS for the DM42 calculator and comes as a binary file DMCP_flash_X.Y.bin.
@@ -28,3 +25,6 @@ The DMCP Menu features several options:
 1. Active USB disk in the setup menu
 1. Copy both files from PC/MAC to the FAT partition of the DM42
 1. Eject DM42 from PC/MAC
+
+# Building Instructions
+Read the README file.

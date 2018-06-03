@@ -26,6 +26,10 @@ The System Menu is the regular menu as known from previous versions, see https:/
 1. Active USB disk in the setup menu
 1. Copy both files from PC/MAC to the FAT partition of the DM42
 1. Eject DM42 from PC/MAC
+1. The DMCP firmware should get automatically detected, confirm by pressing ENTER to flash it.
+1. Once finished the calculator resets and displays the DMCP Menu.
+1. Choose "Load Program" and select DM-X.Y.Z.pgm
+1. Once loaded, select "Run Program" and Free42 starts.
 
 # Building Instructions
 Read the README file.

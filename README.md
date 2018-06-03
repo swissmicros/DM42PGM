@@ -9,7 +9,7 @@ Both binaries are found here [link to fw](www.swissmicros.com/dm42/firmware)
 ## DM42 Menus
 The DM42 has two menus, the DMCP Menu and the System Menu.
 The System Menu is the regular menu as known from previous versions, see https://www.swissmicros.com/dm42/doc/dm42_user_manual/
-The DMCP Menu features several options:
+### The DMCP Menu features several options:
 
 ![dmcp_menu.jpg](/dmcp_menu.jpg)
  1. "Program Info" display information of the program loaded in the CPU

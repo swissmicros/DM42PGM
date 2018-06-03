@@ -3,7 +3,7 @@
 # Architecture Overview
 ## Structure
 The DM Calculator Platform (DMCP) is the OS for the DM42 calculator and comes as a binary file DMCP_flash_X.Y.bin.
-The OS runs executable modules like Free42 which are called DM42-X.Y.Z.pgm.
+The OS runs executable modules like Free42 which have a .pgm extension.
 Both binaries are found here [link to fw](www.swissmicros.com/dm42/firmware)
 
 ## DM42 Menus

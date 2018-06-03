@@ -4,7 +4,7 @@
 ## Structure
 The DM Calculator Platform (DMCP) is the OS for the DM42 calculator and comes as a binary file DMCP_flash_X.Y.bin.
 The OS runs executable modules like Free42 which have a .pgm extension.
-Both binaries are found here [link to binaries](www.swissmicros.com/dm42/firmware)
+Both binaries are found here [link to binaries](http://www.swissmicros.com/dm42/firmware)
 
 ## DM42 Menus
 The DM42 has two menus, the DMCP Menu and the System Menu.
@@ -24,7 +24,7 @@ The System Menu is the regular menu as known from previous versions, see https:/
 ## Update procedure
 
 1. Active USB disk in the setup menu
-1. Copy both [files](www.swissmicros.com/dm42/firmware) from PC/MAC to the FAT partition of the DM42
+1. Copy both [files](http://www.swissmicros.com/dm42/firmware) from PC/MAC to the FAT partition of the DM42
 1. Eject DM42 from PC/MAC
 1. The DMCP firmware should get automatically detected, confirm by pressing ENTER to flash it.
 1. Once finished the calculator resets and displays the DMCP Menu.

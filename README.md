@@ -24,7 +24,7 @@ The System Menu is the regular menu as known from previous versions, see https:/
 ## Update procedure
 
 1. Active USB disk in the setup menu
-1. Copy both [files](http://www.swissmicros.com/dm42/firmware) from PC/MAC to the FAT partition of the DM42
+1. Copy both [DMCP_flash_X.Y.bin and the .pgm](http://www.swissmicros.com/dm42/firmware) file from the PC/MAC to the FAT partition of the DM42
 1. Eject DM42 from PC/MAC
 1. The DMCP firmware should get automatically detected, confirm by pressing ENTER to flash it.
 1. Once finished the calculator resets and displays the DMCP Menu.

@@ -1,7 +1,11 @@
 
 == PREREQUISITES
 
-ARM toolchain + make
+GNU ARM toolchain + make
+
+GNU ARM toolchain can be downloaded from
+  https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads.
+We are currently using Version 7-2017-q4-major Linux 64-bit.
 
 Basic shell utilities:
   bash, dd, sed, tac, printf, find, etc.
@@ -14,7 +18,7 @@ require separate installation):
 
 == BUILD
 
-Add ARM toolchain and bin/ directory path to PATH.
+Add GNU ARM toolchain and bin/ directory path to PATH.
 
 Choose and create some build directory (here build/), prepare
 DM42PGM sources (here DM42PGM.tar.gz)

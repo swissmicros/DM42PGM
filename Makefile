@@ -18,8 +18,8 @@ endif
 BUILD_DIR = build
 # Free42 header files
 FREE42DIR = free42
-# check_qspi_crc path
-CHECK_QSPI_CRC_DIR = bin
+# BIN tools path
+BIN_DIR = bin
 
 ######################################
 # source
@@ -141,8 +141,8 @@ $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
 	$(OBJCOPY) --remove-section .qspi -O binary  $@  $(BUILD_DIR)/$(TARGET)_flash.bin
 	$(OBJCOPY) --only-section   .qspi -O ihex    $@  $(BUILD_DIR)/$(TARGET)_qspi.hex
 	$(OBJCOPY) --only-section   .qspi -O binary  $@  $(BUILD_DIR)/$(TARGET)_qspi.bin
-	$(CHECK_QSPI_CRC_DIR)/check_qspi_crc $(TARGET) dm/qspi_crc.h || ( $(MAKE) clean && false )
-	$(CHECK_QSPI_CRC_DIR)/add_pgm_chsum build/$(TARGET)_flash.bin build/$(TARGET).pgm
+	$(BIN_DIR)/check_qspi_crc $(TARGET) dm/qspi_crc.h || ( $(MAKE) clean && false )
+	$(BIN_DIR)/add_pgm_chsum build/$(TARGET)_flash.bin build/$(TARGET).pgm
 	$(SIZE) $@
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)

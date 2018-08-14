@@ -30,6 +30,15 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 
+
+  The SDK and related material is released as “NOMAS”  (NOt MAnufacturer Supported).
+
+  1. Info is released to assist customers using, exploring and extending the product
+  2. Do NOT contact the manufacturer with questions, seeking support, etc. regarding
+     NOMAS material as no support is implied or committed-to by the Manufacturer
+  3. The Manufacturer may reply and/or update materials if and when needed solely at
+     their discretion
+
 */
 
 #define LIBRARY_FN_BASE   0x08000201
@@ -180,3 +189,4 @@
 #define f_read (*(typeof(f_read)*)(LIBRARY_FN_BASE+572))
 #define f_write (*(typeof(f_write)*)(LIBRARY_FN_BASE+576))
 #define f_lseek (*(typeof(f_lseek)*)(LIBRARY_FN_BASE+580))
+#define run_help_file (*(typeof(run_help_file)*)(LIBRARY_FN_BASE+584))

@@ -65,7 +65,9 @@ FillZerobss0:
 	bl __libc_init_array
 /* Call the application entry point.*/
 	bl	program_main
+	bl	post_main
 
+/* Just for sure as post_main shouldn't return. */
 LoopForever:
 	b LoopForever
 

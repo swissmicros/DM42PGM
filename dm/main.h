@@ -30,13 +30,22 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 
+
+  The SDK and related material is released as “NOMAS”  (NOt MAnufacturer Supported).
+
+  1. Info is released to assist customers using, exploring and extending the product
+  2. Do NOT contact the manufacturer with questions, seeking support, etc. regarding
+     NOMAS material as no support is implied or committed-to by the Manufacturer
+  3. The Manufacturer may reply and/or update materials if and when needed solely at
+     their discretion
+
 */
 #ifndef __PGM_MAIN_H__
 #define __PGM_MAIN_H__
 
 #define PROGRAM_NAME    "DM42PGM"
 #define DM42_VERSION    PLATFORM_VERSION ".1"
-#define F42_VERSION     "2.0.20"
+#define F42_VERSION     "2.0.21"
 #define PROGRAM_VERSION DM42_VERSION "/" F42_VERSION
 
 // Disable printf traces for release build

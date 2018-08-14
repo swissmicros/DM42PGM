@@ -30,6 +30,15 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 
+
+  The SDK and related material is released as “NOMAS”  (NOt MAnufacturer Supported).
+
+  1. Info is released to assist customers using, exploring and extending the product
+  2. Do NOT contact the manufacturer with questions, seeking support, etc. regarding
+     NOMAS material as no support is implied or committed-to by the Manufacturer
+  3. The Manufacturer may reply and/or update materials if and when needed solely at
+     their discretion
+
 */
 
 #include <stdio.h>
@@ -439,8 +448,8 @@ typedef struct {
   uint8_t  reg_font_ix;   // Current register font index
   uint8_t  stack_layout;  // Current stack layout
   uint8_t  pgm_font_ix;   // Current program font index
-  uint8_t  dummy[7];      // .. for future use
-  //uint32_t font_offsets;  // Register font offsets (maybe?)
+  uint8_t  font_offsets[3];// Register font offsets
+  uint8_t  dummy[4];      // .. for future use
 } __packed savestat_data_t;
 
 
@@ -1634,11 +1643,20 @@ int is_disp(int what) {
 #define REG_OFFS_MAX   ( REG_OFFS_HALF - 1)
 #define REG_OFFS_MIN   (-REG_OFFS_HALF    )
 
+#define MAX_REG_OFFS 5
 
 int get_reg_font_offset(int line_reg_nr) {
   int offs = (reg_font_offset >> (line_reg_nr*REG_OFFS_BITS)) & REG_OFFS_MASK;
   return (offs < REG_OFFS_HALF) ? offs : offs-REG_OFFS_RANGE;
 }
+
+int inc_reg_font_offset(int line_reg_nr) {
+  int offs = get_reg_font_offset(line_reg_nr)+1;
+  if (offs > MAX_REG_OFFS) offs = -MAX_REG_OFFS;
+  set_reg_font_offset(line_reg_nr, offs);
+  return offs;
+}
+
 
 int set_reg_font_offset(int line_reg_nr, int offs) {
   uint32_t val = 0;
@@ -1671,6 +1689,8 @@ int get_stack_layout() {
 char * get_stack_layout_str(char *s, int layout) {
   char * t = s;
   
+  if ( layout & STACK_REG_L0) *t++ = 'L';
+
   *t++ = 'X'; // Always X
 
   if ( layout & STACK_REG_Y ) *t++ = 'Y';
@@ -1958,6 +1978,9 @@ void disp_regs(int what) {
       set_reg_font_offset(LINE_REG_A, -3);
       // == TEST END ==
 #endif
+
+      if ( stack_layout & STACK_REG_L0)
+        disp_reg("L:",REG_LX, LINE_REG_L);
 
       // X is always displayed as edit or reg
       if (is_edit_x) { // (is_edit) - INPUT edit in text area already
@@ -2451,6 +2474,10 @@ void program_main() {
           dat.reg_font_ix = reg_font_ix;
           dat.pgm_font_ix = pgm_font_ix;
 
+          dat.font_offsets[0] = (reg_font_offset>> 0) & 0xff;
+          dat.font_offsets[1] = (reg_font_offset>> 8) & 0xff;
+          dat.font_offsets[2] = (reg_font_offset>>16) & 0xff;
+
           strcpy(dat.platf_ver,PLATFORM_VERSION);
           dat.century = rtc_read_century();
           
@@ -2597,6 +2624,8 @@ void program_main() {
           reg_font_ix = dat.reg_font_ix;
           pgm_font_ix = dat.pgm_font_ix;
 
+          reg_font_offset = ((uint32_t*)dat.font_offsets)[0] & 0xffffff;
+
           stack_layout = dat.stack_layout;
           if (stack_layout == 0) stack_layout = STACK_XYZTL; // Fall down to default for old savefiles
         }
@@ -2706,8 +2735,8 @@ void program_main() {
            F1 - Help
            F2 - Toggle main menu
            F3 - (not assigned)
-           F4 - Increse volume 
-     Shift-F4 - Decrese volume
+           F4 - Increase volume 
+     Shift-F4 - Decrease volume
            F5 - Stack alignment
      Shift-F5 - Vintage/sans font
            F6 - Increase font size
@@ -2759,13 +2788,13 @@ void program_main() {
 
         case KEY_F6:
           if ( ANN(SHIFT) ) {
-            // Shift-F6 = decrese font size
+            // Shift-F6 = decrease font size
             if ( is_pgm_mode() )
               pgm_font_ix = lcd_prevFontNr(pgm_font_ix);
             else
               reg_font_ix = lcd_prevFontNr(reg_font_ix);
           } else {
-            // F6 = Increse font size
+            // F6 = Increase font size
             if ( is_pgm_mode() )
               pgm_font_ix = lcd_nextFontNr(pgm_font_ix);
             else
@@ -2837,7 +2866,7 @@ void program_main() {
     no_menu_key = is_menu_active && key > 0 && key < 7;
 
     if ( (key > 0 && key <= MAX_KEY_NR) && alpha_table != ALPHA_INACTIVE ) {
-      // Translate aplha keys
+      // Translate alpha keys
       const char * transl = ANN(SHIFT) ? alpha_shift_tables[alpha_table] : alpha_tables[alpha_table];
       char c = ALPHA_NO_TRANSL;
       if ( transl )
@@ -2888,7 +2917,7 @@ void program_main() {
         core_timeout3(0);
       }
 
-      // We don't want to process other key when exitting
+      // We don't want to process other key when exiting
       if (ST(STAT_PGM_END)) continue;
 
       // Press key

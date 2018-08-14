@@ -30,6 +30,15 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 
+
+  The SDK and related material is released as “NOMAS”  (NOt MAnufacturer Supported).
+
+  1. Info is released to assist customers using, exploring and extending the product
+  2. Do NOT contact the manufacturer with questions, seeking support, etc. regarding
+     NOMAS material as no support is implied or committed-to by the Manufacturer
+  3. The Manufacturer may reply and/or update materials if and when needed solely at
+     their discretion
+
 */
 #ifndef __DM42_MAIN_H__
 #define __DM42_MAIN_H__
@@ -45,6 +54,7 @@
 #define LINE_REG_L    4
 #define LINE_REG_A    5
 
+#define STACK_REG_L0  BIT(0)
 #define STACK_REG_Y   BIT(1)
 #define STACK_REG_Z   BIT(2)
 #define STACK_REG_T   BIT(3)
@@ -58,6 +68,7 @@
 #define STACK_XYL      (STACK_REG_Y|STACK_REG_L)
 #define STACK_XYA      (STACK_REG_Y|STACK_REG_A)
 #define STACK_XY       (STACK_REG_Y)
+#define STACK_LXYZT    (STACK_REG_L0|STACK_REG_Y|STACK_REG_Z|STACK_REG_T)
 
 
 // LCD update constants
@@ -103,6 +114,11 @@ void toggle_disp(int what);
 int is_disp(int what);
 
 char get_disp_date_sep();
+
+int get_reg_font_offset(int line_reg_nr);
+int inc_reg_font_offset(int line_reg_nr);
+int set_reg_font_offset(int line_reg_nr, int offs);
+
 // --
 
 
@@ -118,6 +134,9 @@ char * get_stack_layout_str(char *s, int layout);
 
 void copy_reset_state_filename(char *s, int maxlen);
 
+
+#define LCD_HEADER_LINES 24
+#define LCD_ANN_LINES    16
 
 // Force to redraw calc LCD
 void calc_lcd_redraw();

@@ -30,6 +30,15 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 
+
+  The SDK and related material is released as “NOMAS”  (NOt MAnufacturer Supported).
+
+  1. Info is released to assist customers using, exploring and extending the product
+  2. Do NOT contact the manufacturer with questions, seeking support, etc. regarding
+     NOMAS material as no support is implied or committed-to by the Manufacturer
+  3. The Manufacturer may reply and/or update materials if and when needed solely at
+     their discretion
+
 */
 
 #include <sys/stat.h>
@@ -70,7 +79,8 @@ int _read (int file, char *ptr, int len)
 
 int _write(int file, char *ptr, int len)
 {
-	return len;
+	// Routed to OS, where it is printed to ITM
+	return __sysfn__write(file, ptr, len);
 }
 
 
@@ -146,5 +156,9 @@ void _free_r (struct _reent *pr, void *ptr) {
 }
 
 
-
+void post_main() {
+	// Just start DMCP
+	set_reset_magic(RUN_DMCP_MAGIC);
+	sys_reset();
+}
 

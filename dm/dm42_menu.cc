@@ -30,6 +30,15 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 
+
+  The SDK and related material is released as “NOMAS”  (NOt MAnufacturer Supported).
+
+  1. Info is released to assist customers using, exploring and extending the product
+  2. Do NOT contact the manufacturer with questions, seeking support, etc. regarding
+     NOMAS material as no support is implied or committed-to by the Manufacturer
+  3. The Manufacturer may reply and/or update materials if and when needed solely at
+     their discretion
+
 */
 
 #include <stdio.h>
@@ -91,6 +100,13 @@ int lcd_for_dm42(int what) {
       t24->y += 4;
       lcd_puts(t24, "Unhandled memory allocation:");
       break;
+
+    case DISP_NO_PGM_SEL:
+      lcd_putsR(t24, "Select Programs");
+      t24->y += 4;
+      lcd_putsAt(t24, 3, "No program selected");
+      lcd_putsAt(t24, 7, "Press a key to continue...");
+    break;
 
     case DISP_LOADING_STATE:
       lcd_putsR(t24, "Loading from File");
@@ -588,8 +604,11 @@ void pgm_export() {
   strcat(pgm_fn,"/");
 
   res = select_programs("Select Programs", pgm_sel.pgm_indices, &pgm_sel.pgm_cnt);
-  if ( res != 0 || pgm_sel.pgm_cnt == 0 )
-    return; // FIXME: write something?
+  if ( res != 0 || pgm_sel.pgm_cnt == 0 ) {
+    lcd_for_dm42(DISP_NO_PGM_SEL);
+    wait_for_key_press();
+    return;
+  }
   
   //void file_selection_screen(const char * title, const char * base_dir, const char * ext, file_sel_fn_t sel_fn, int disp_new, void * data)
   file_selection_screen("Program Export Filename", PGM_DIR, PGM_EXT, pgm_export_enter, 1, 1, &pgm_sel); 
@@ -654,6 +673,7 @@ const uint8_t mid_settings[] = {
     MI_SET_TIME,
     MI_SET_DATE,
     MI_TOPBAR_MENU,
+    MI_STACK_AREA,
     MI_BEEP_MUTE,
     MI_SLOW_AUTOREP,
     MI_STACK_CONFIG,
@@ -671,6 +691,16 @@ const uint8_t mid_topbar[] = {
     0 }; // Terminator
 
 
+const uint8_t mid_stack_area[] = {
+    MI_SA_REG_X,
+    MI_SA_REG_Y,
+    MI_SA_REG_Z,
+    MI_SA_REG_T,
+    MI_SA_REG_L,
+    MI_SA_REG_A,
+    0 }; // Terminator
+
+
 const uint8_t mid_stack[] = {
     MI_STACK_XYZTL,
     MI_STACK_XYZTA,
@@ -678,6 +708,7 @@ const uint8_t mid_stack[] = {
     MI_STACK_XYL,
     MI_STACK_XYA,
     MI_STACK_XY,
+    MI_STACK_LXYZT,
     0 }; // Terminator
 
 
@@ -691,6 +722,7 @@ int stack_menu_index() {
     STACK_XYL,
     STACK_XYA,
     STACK_XY,
+    STACK_LXYZT,
     0 }; // Terminator
   int ix = 0;
   int sl = get_stack_layout();
@@ -710,6 +742,7 @@ const smenu_t     MID_SETTINGS = { "Settings",  mid_settings,  NULL, NULL};
 const smenu_t MID_STACK_CONFIG = { "Stack Layout", mid_stack, NULL, NULL};
 const smenu_t    MID_STATEFILE = { "Calculator State", mid_statefile, NULL, NULL};
 const smenu_t       MID_TOPBAR = { "Status Bar", mid_topbar, NULL, NULL};
+const smenu_t   MID_STACK_AREA = { "Stack Area", mid_stack_area, NULL, NULL};
 
 
 // ----------------------------------------------------------------------------------
@@ -792,6 +825,10 @@ int run_menu_item(uint8_t line_id) {
     set_stack_layout(STACK_XY);
     ret = MRET_EXIT;
     break;
+  case MI_STACK_LXYZT:
+    set_stack_layout(STACK_LXYZT);
+    ret = MRET_EXIT;
+    break;
 
   /* Top Bar */
   case MI_TOPBAR_MENU:
@@ -808,6 +845,18 @@ int run_menu_item(uint8_t line_id) {
   case MI_SETTINGS:
     ret = handle_menu(&MID_SETTINGS,MENU_ADD, 0);
     break;
+
+  case MI_STACK_AREA:
+    ret = handle_menu(&MID_STACK_AREA,MENU_ADD, 0);
+    break;
+
+  case MI_SA_REG_X:  inc_reg_font_offset(LINE_REG_X); break;
+  case MI_SA_REG_Y:  inc_reg_font_offset(LINE_REG_Y); break;
+  case MI_SA_REG_Z:  inc_reg_font_offset(LINE_REG_Z); break;
+  case MI_SA_REG_T:  inc_reg_font_offset(LINE_REG_T); break;
+  case MI_SA_REG_L:  inc_reg_font_offset(LINE_REG_L); break;
+  case MI_SA_REG_A:  inc_reg_font_offset(LINE_REG_A); break;
+
 
   case MI_ABOUT_PGM:
     lcd_for_dm42(DISP_ABOUT);
@@ -868,6 +917,13 @@ char * state_str(char *s, const char * txt) {
 }
 
 
+char * nr_str(char *s, const char * txt, int nr) {
+  sprintf(s, "%s: %i", txt, nr);
+  return s;
+}
+
+
+
 // Returns NULL if not found
 const char * menu_line_str(uint8_t line_id, char * s, const int slen) {
   const char * ln;
@@ -891,6 +947,7 @@ const char * menu_line_str(uint8_t line_id, char * s, const int slen) {
   case MI_STACK_XYL:    ln = orb_str(s, "XYL",   get_stack_layout() == STACK_XYL);   break;
   case MI_STACK_XYA:    ln = orb_str(s, "XYA",   get_stack_layout() == STACK_XYA);   break;
   case MI_STACK_XY:     ln = orb_str(s, "XY",    get_stack_layout() == STACK_XY);    break;
+  case MI_STACK_LXYZT:  ln = orb_str(s, "LXYZT", get_stack_layout() == STACK_LXYZT); break;
 
   case MI_TOPBAR_MENU:  ln = "Status Bar >";         break;
   case MI_DISP_STATFN:  ln = opt_str(s, " State Filename",  is_disp(DISP_STATFN));  break;
@@ -904,6 +961,14 @@ const char * menu_line_str(uint8_t line_id, char * s, const int slen) {
 
   case MI_SETTINGS:     ln = "Settings >";           break;
   case MI_ABOUT_PGM:    ln = "About >";              break;
+
+  case MI_STACK_AREA:   ln = "Stack Font Sizes >";         break;
+  case MI_SA_REG_X:     ln = nr_str(s, "Font Size Offset Reg X", get_reg_font_offset(LINE_REG_X) ); break;
+  case MI_SA_REG_Y:     ln = nr_str(s, "Font Size Offset Reg Y", get_reg_font_offset(LINE_REG_Y) ); break;
+  case MI_SA_REG_Z:     ln = nr_str(s, "Font Size Offset Reg Z", get_reg_font_offset(LINE_REG_Z) ); break;
+  case MI_SA_REG_T:     ln = nr_str(s, "Font Size Offset Reg T", get_reg_font_offset(LINE_REG_T) ); break;
+  case MI_SA_REG_L:     ln = nr_str(s, "Font Size Offset Reg L", get_reg_font_offset(LINE_REG_L) ); break;
+  case MI_SA_REG_A:     ln = nr_str(s, "Font Size Offset Reg A", get_reg_font_offset(LINE_REG_A) ); break;
 
   default:
     ln = NULL;

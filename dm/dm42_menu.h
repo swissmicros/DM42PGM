@@ -30,6 +30,15 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 
+
+  The SDK and related material is released as “NOMAS”  (NOt MAnufacturer Supported).
+
+  1. Info is released to assist customers using, exploring and extending the product
+  2. Do NOT contact the manufacturer with questions, seeking support, etc. regarding
+     NOMAS material as no support is implied or committed-to by the Manufacturer
+  3. The Manufacturer may reply and/or update materials if and when needed solely at
+     their discretion
+
 */
 #ifndef __DM42_MENU_H__
 #define __DM42_MENU_H__
@@ -40,6 +49,7 @@ extern const smenu_t         MID_FILE; // File menu
 extern const smenu_t MID_STACK_CONFIG; // Stack config menu
 extern const smenu_t    MID_STATEFILE; // State file load/save
 extern const smenu_t       MID_TOPBAR; // Top bar config
+extern const smenu_t   MID_STACK_AREA; // Stack area config
 
 
 // --------------------------------
@@ -63,13 +73,12 @@ extern const smenu_t       MID_TOPBAR; // Top bar config
 #define MI_STACK_XYL       37
 #define MI_STACK_XYA       38
 #define MI_STACK_XY        39
+#define MI_STACK_LXYZT     40
 
-#define MI_STATEFILE       40
-#define MI_LOAD_STATE      41
-#define MI_SAVE_STATE      42
+#define MI_STATEFILE       41
+#define MI_LOAD_STATE      42
+#define MI_SAVE_STATE      43
 
-
-#define MI_TOPBAR_MENU     43
 
 #define MI_DISP_STATFN     44
 #define MI_DISP_DOW        45
@@ -82,6 +91,17 @@ extern const smenu_t       MID_TOPBAR; // Top bar config
 #define MI_SETTINGS        51
 #define MI_ABOUT_PGM       52
 
+#define MI_STACK_AREA      53
+#define MI_SA_REG_X        54
+#define MI_SA_REG_Y        55
+#define MI_SA_REG_Z        56
+#define MI_SA_REG_T        57
+#define MI_SA_REG_L        58
+#define MI_SA_REG_A        59
+
+#define MI_TOPBAR_MENU     60
+
+
 // --------------------------------
 
 #define MRET_SAVESTATE   777
@@ -93,6 +113,7 @@ extern const smenu_t       MID_TOPBAR; // Top bar config
 #define DISP_SAVING_STATE      101
 #define DISP_SAVE_FAILED       102
 #define DISP_ALLOC_FAIL        103
+#define DISP_NO_PGM_SEL        104
 
 int lcd_for_dm42(int what);
 

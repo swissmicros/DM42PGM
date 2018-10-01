@@ -3,7 +3,7 @@
 
 GNU ARM toolchain can be downloaded from
   https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads.
-We are currently using Version 7-2017-q4-major Linux 64-bit.
+We are currently using Version 7-2018-q2-update Linux 64-bit.
 
 Make is usually available in some base development package, but you
 can install it directly, e.g. for debian like systems
@@ -20,7 +20,7 @@ Some usually available aux utilities (could require separate installation):
 == Build
 
 Add ARM toolchain bin/ directory to PATH.
-(e.g. ~/arm/gcc-arm-none-eabi-7-2017-q4-major/bin)
+(e.g. ~/arm/gcc-arm-none-eabi-7-2018-q2-update/bin)
 
 Run make to build the program.
 

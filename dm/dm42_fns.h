@@ -1,43 +1,43 @@
 /*
 
-  Copyright (c) 2018 SwissMicros GmbH
+BSD 3-Clause License
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
+Copyright (c) 2018, SwissMicros
+All rights reserved.
 
-  1. Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-  2. Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in
-     the documentation and/or other materials provided with the
-     distribution.
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
 
-  3. Neither the name of the copyright holder nor the names of its
-     contributors may be used to endorse or promote products derived
-     from this software without specific prior written permission.
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
 
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
-  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-  OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE.
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-  The SDK and related material is released as “NOMAS”  (NOt MAnufacturer Supported).
+  The software and related material is released as “NOMAS”  (NOt MAnufacturer Supported). 
 
   1. Info is released to assist customers using, exploring and extending the product
   2. Do NOT contact the manufacturer with questions, seeking support, etc. regarding
      NOMAS material as no support is implied or committed-to by the Manufacturer
-  3. The Manufacturer may reply and/or update materials if and when needed solely at
-     their discretion
+  3. The Manufacturer may reply and/or update materials if and when needed solely
+     at their discretion
 
 */
 #ifndef __DM42_MAIN_H__
@@ -87,10 +87,15 @@
 extern FRESULT pgm_res;
 
 
-
 // State files dir
 #define STATE_DIR      "/STATE"
 #define STATE_EXT      ".s42"
+
+
+// Print to file dir
+#define PRINT_DIR      "/PRINTS"
+#define PRINT_GR_EXT   ".bmp"
+#define PRINT_TXT_EXT  ".txt"
 
 
 // Graphics backup during off
@@ -119,6 +124,20 @@ int get_reg_font_offset(int line_reg_nr);
 int inc_reg_font_offset(int line_reg_nr);
 int set_reg_font_offset(int line_reg_nr, int offs);
 
+
+#define PRTOF_TEXT       0
+#define PRTOF_GRAPHICS   1
+#define PRTOF_BUF_COUNT  2
+#define PRTOF_GR_IN_TXT  6
+#define PRTOF_NOIR       7
+
+int is_print_to_file(int what);
+void set_print_to_file(int what, int val, int gui);
+
+#define PRTOF_LIMIT_FLUSH  0
+#define PRTOF_FULL_FLUSH   1
+void prtof_buf_flush(int what, int full);
+
 // --
 
 
@@ -141,5 +160,18 @@ void copy_reset_state_filename(char *s, int maxlen);
 // Force to redraw calc LCD
 void calc_lcd_redraw();
 
+#ifndef max
+#define max(x,y) ({ \
+  __typeof__ (x) _x = (x); \
+  __typeof__ (y) _y = (y); \
+  _x > _y ? _x : _y; })
+#endif
+
+#ifndef min
+#define min(x,y) ({ \
+  __typeof__ (x) _x = (x); \
+  __typeof__ (y) _y = (y); \
+  _x < _y ? _x : _y; })
+#endif
 
 #endif

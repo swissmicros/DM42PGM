@@ -1,43 +1,43 @@
 /*
 
-  Copyright (c) 2018 SwissMicros GmbH
+BSD 3-Clause License
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
+Copyright (c) 2018, SwissMicros
+All rights reserved.
 
-  1. Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-  2. Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in
-     the documentation and/or other materials provided with the
-     distribution.
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
 
-  3. Neither the name of the copyright holder nor the names of its
-     contributors may be used to endorse or promote products derived
-     from this software without specific prior written permission.
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
 
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
-  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-  OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE.
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-  The SDK and related material is released as “NOMAS”  (NOt MAnufacturer Supported).
+  The software and related material is released as “NOMAS”  (NOt MAnufacturer Supported). 
 
   1. Info is released to assist customers using, exploring and extending the product
   2. Do NOT contact the manufacturer with questions, seeking support, etc. regarding
      NOMAS material as no support is implied or committed-to by the Manufacturer
-  3. The Manufacturer may reply and/or update materials if and when needed solely at
-     their discretion
+  3. The Manufacturer may reply and/or update materials if and when needed solely
+     at their discretion
 
 */
 
@@ -190,3 +190,9 @@
 #define f_write (*(typeof(f_write)*)(LIBRARY_FN_BASE+576))
 #define f_lseek (*(typeof(f_lseek)*)(LIBRARY_FN_BASE+580))
 #define run_help_file (*(typeof(run_help_file)*)(LIBRARY_FN_BASE+584))
+#define set_buzzer (*(typeof(set_buzzer)*)(LIBRARY_FN_BASE+588))
+#define __sysfn_read_key (*(typeof(read_key)*)(LIBRARY_FN_BASE+592))
+#define get_tim1_timer (*(typeof(get_tim1_timer)*)(LIBRARY_FN_BASE+596))
+#define update_bmp_file_header (*(typeof(update_bmp_file_header)*)(LIBRARY_FN_BASE+600))
+#define make_date_filename (*(typeof(make_date_filename)*)(LIBRARY_FN_BASE+604))
+#define reverse_byte (*(typeof(reverse_byte)*)(LIBRARY_FN_BASE+608))

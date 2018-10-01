@@ -1,43 +1,43 @@
 /*
 
-  Copyright (c) 2018 SwissMicros GmbH
+BSD 3-Clause License
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
+Copyright (c) 2018, SwissMicros
+All rights reserved.
 
-  1. Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-  2. Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in
-     the documentation and/or other materials provided with the
-     distribution.
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
 
-  3. Neither the name of the copyright holder nor the names of its
-     contributors may be used to endorse or promote products derived
-     from this software without specific prior written permission.
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
 
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
-  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-  OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE.
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-  The SDK and related material is released as “NOMAS”  (NOt MAnufacturer Supported).
+  The software and related material is released as “NOMAS”  (NOt MAnufacturer Supported). 
 
   1. Info is released to assist customers using, exploring and extending the product
   2. Do NOT contact the manufacturer with questions, seeking support, etc. regarding
      NOMAS material as no support is implied or committed-to by the Manufacturer
-  3. The Manufacturer may reply and/or update materials if and when needed solely at
-     their discretion
+  3. The Manufacturer may reply and/or update materials if and when needed solely
+     at their discretion
 
 */
 #ifndef __SYS_DMCP_H__
@@ -122,6 +122,8 @@ void lcd_fillLines(int ln, uint8_t val, int cnt);
 
 void lcd_set_buf_cleared(int val);
 int lcd_get_buf_cleared();
+
+uint8_t reverse_byte(uint8_t x);
 
 
 // ----------------------------------
@@ -343,11 +345,11 @@ typedef struct {
 
 // ----------------------------------
 
-#define PLATFORM_VERSION "3.9a"
+#define PLATFORM_VERSION "3.10"
 
 // System interface version
 #define PLATFORM_IFC_CNR   3
-#define PLATFORM_IFC_VER   8
+#define PLATFORM_IFC_VER   9
 
 // STATIC_ASSERT ...
 #define ASSERT_CONCAT_(a, b) a##b
@@ -381,6 +383,7 @@ int get_vbat();
 // Freq in mHz
 void start_buzzer_freq(uint32_t freq);
 void stop_buzzer();
+void set_buzzer(int pin1val, int pin2val);
 
 void beep_volume_up();
 void beep_volume_down();
@@ -448,6 +451,12 @@ typedef struct {
 	char pgm_ver[16];
 } __packed prog_info_t;
 
+
+// Keyboard
+int read_key(int *k1, int *k2);
+
+// Timer
+uint32_t get_tim1_timer();
 
 
 // ----------------------------------
@@ -831,6 +840,9 @@ void sys_reset();
 // Key
 int sys_last_key();
 
+// Aux file
+void make_date_filename(char * str, const char * dir, const char * ext);
+
 
 // ----------------------------------
 
@@ -839,9 +851,16 @@ void run_help_file(const char * help_file);
 
 // ----------------------------------
 
+
 // Off images
 void draw_power_off_image(int allow_errors);
 void reset_off_image_cycle();
+
+#define BG_COL_PAPER  0xf4f2dc
+#define BG_COL_LCD    0xdff5cc
+
+int update_bmp_file_header(FIL* fp, int width, int height, uint32_t bg_color);
+
 
 // ----------------------------------
 

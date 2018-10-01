@@ -1,43 +1,43 @@
 /*
 
-  Copyright (c) 2018 SwissMicros GmbH
+BSD 3-Clause License
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
+Copyright (c) 2018, SwissMicros
+All rights reserved.
 
-  1. Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-  2. Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in
-     the documentation and/or other materials provided with the
-     distribution.
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
 
-  3. Neither the name of the copyright holder nor the names of its
-     contributors may be used to endorse or promote products derived
-     from this software without specific prior written permission.
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
 
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
-  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-  OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE.
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-  The SDK and related material is released as “NOMAS”  (NOt MAnufacturer Supported).
+  The software and related material is released as “NOMAS”  (NOt MAnufacturer Supported). 
 
   1. Info is released to assist customers using, exploring and extending the product
   2. Do NOT contact the manufacturer with questions, seeking support, etc. regarding
      NOMAS material as no support is implied or committed-to by the Manufacturer
-  3. The Manufacturer may reply and/or update materials if and when needed solely at
-     their discretion
+  3. The Manufacturer may reply and/or update materials if and when needed solely
+     at their discretion
 
 */
 
@@ -165,6 +165,7 @@ int hp2print(char *dst, const char *src, int srclen) {
 }
 
 
+// Required by core_list_programs()
 int hp2ascii(char *dst, const char *src, int srclen) {
   const char *esc;
   unsigned char c;
@@ -218,6 +219,59 @@ int hp2ascii(char *dst, const char *src, int srclen) {
   }
   return d;
 }
+
+
+
+int hp2utfchar(char * s, unsigned char c) {
+  const char * u;
+
+  switch (c) {
+    case  0:   u = "÷";      break;
+    case  1:   u = "×";      break;
+    case  2:   u = "√";      break;
+    case  3:   u = "∫";      break;
+    case  4:   u = "▒";      break;
+    case  5:   u = "Σ";      break;
+    case  6:   u = "▶";      break;
+    case  7:   u = "π";      break;
+    case  8:   u = "¿";      break;
+    case  9:   u = "≤";      break;
+    case 10:   u = "\r\n";   break;
+    case 11:   u = "≥";      break;
+    case 12:   u = "≠";      break;
+    case 13:   u = "↲";      break;
+    case 14:   u = "↓";      break;
+    case 15:   u = "→";      break;
+    case 16:   u = "←";      break;
+    case 17:   u = "μ";      break;
+    case 18:   u = "£";      break;
+    case 19:   u = "°";      break;
+    case 20:   u = "Å";      break;
+    case 21:   u = "Ñ";      break;
+    case 22:   u = "Ä";      break;
+    case 23:   u = "∡";      break;
+    case 24:   u = "ᴇ";      break;
+    case 25:   u = "Æ";      break;
+    case 26:   u = "…";      break;
+    case 27:   u = "␛";      break;
+    case 28:   u = "Ö";      break;
+    case 29:   u = "Ü";      break;
+    case 30:   u = "▒";      break;
+    case 31:   u = "■";      break;
+    case 127:  u = "├";      break;
+
+    case 128:  u = ":";      break;
+    case 129:  u = "Y";      break;
+    case 138:  u = "␊";      break;
+    default:
+      s[0] = c & 0x7f;
+      return 1;
+  }
+  strcpy(s,u);
+  return strlen(u);
+}
+
+
 
 
 int hp2font(char *dst, const char *src, int srclen) {
@@ -438,6 +492,11 @@ volatile  int repeat_timeout;
 
 #define SAVESTAT_PERM_MAIN_MENU    BIT(17)
 
+#define SAVESTAT_PRTOF_GR          BIT(18)
+#define SAVESTAT_PRTOF_TXT         BIT(19)
+#define SAVESTAT_PRTOF_NOIR        BIT(20)
+#define SAVESTAT_PRTOF_GR_IN_TXT   BIT(21)
+
 
 typedef struct {
   uint32_t magic;         // Magic for check
@@ -508,6 +567,11 @@ FRESULT pgm_res = FR_OK;
 #define PST_DISP_TIME         BIT(7)
 
 #define PST_PERM_MAIN_MENU    BIT(8)
+
+#define PST_PRTOF_TEXT        BIT(9)
+#define PST_PRTOF_GRAPHICS    BIT(10)
+#define PST_PRTOF_NOIR        BIT(11)
+#define PST_PRTOF_GR_IN_TXT   BIT(12)
 
 
 static volatile uint32_t ann_state = 0;
@@ -790,11 +854,19 @@ uint get_printer_delay() {
 }
 
 
+// Debug only
 char* str_from_hp(char const* s, int length) {
-  static char ss[80];
-  //memcpy(ss, s, length);
-  int a = hp2ascii(ss,s,length);
-  ss[a] = 0;
+  const int maxlen = 76;
+  static char ss[maxlen+4];
+  char * d = ss;
+
+  for(int a=0; a<length; a++) {
+    int b = hp2utfchar(d, s[a]);
+    d += b;
+    if (d-ss > maxlen) break;
+  }
+  *d = 0;
+
   return ss;
 }
 
@@ -855,6 +927,12 @@ lbuf_end:
     }
   }
 }
+
+// Print to file
+void prtof_add_graphics_lines(const char *bits, int bytesperline, int width, int height);
+void prtof_add_text(const char *str, int len, int dbl);
+void prtof_add_gr_text(const char *bits, int bytesperline, int width, int height);
+
 
 
 } // "C"
@@ -921,7 +999,21 @@ void shell_print(const char *text, int length,
       width = MAX_82240_WIDTH;
 
     lcd_refresh(); // Show annunciator
-    
+
+    if (is_print_to_file(PRTOF_GRAPHICS)) {
+      prtof_add_graphics_lines(bits, bytesperline, width, height);
+    }
+
+    if (is_print_to_file(PRTOF_TEXT)) {
+      if (is_print_to_file(PRTOF_GR_IN_TXT))
+        prtof_add_gr_text(bits, bytesperline, width, height);
+      else
+        prtof_add_text(text,5,0);
+    }
+
+    if (is_print_to_file(PRTOF_NOIR))
+      return;
+
     // Display graphics
     if ( !printer_was_graphics ) {
       print_byte(4); // Print line and leave print head at right; use before each line of graphics to ensure that multiple lines of graphics line up vertically.
@@ -954,6 +1046,18 @@ void shell_print(const char *text, int length,
     }
     return;
   }
+
+  // Text print
+  if (is_print_to_file(PRTOF_GRAPHICS)) {
+    prtof_add_graphics_lines(bits, bytesperline, width, height);
+  }
+
+  if (is_print_to_file(PRTOF_TEXT)) {
+    prtof_add_text(text, length, is_wide_print());
+  }
+
+  if (is_print_to_file(PRTOF_NOIR))
+    return;
   
   lcd_refresh(); // Show annunciator
   print_wait_for(PRINT_TXT_LN);
@@ -1706,8 +1810,385 @@ char * get_stack_layout_str(char *s, int layout) {
 
 
 
-// Savestate functions
+/*
+ ▄▄▄▄▄           ▀             ▄             ▄                    ▄▀▀    ▀    ▀▀█          
+ █   ▀█  ▄ ▄▄  ▄▄▄    ▄ ▄▄   ▄▄█▄▄         ▄▄█▄▄   ▄▄▄          ▄▄█▄▄  ▄▄▄      █     ▄▄▄  
+ █▄▄▄█▀  █▀  ▀   █    █▀  █    █             █    █▀ ▀█           █      █      █    █▀  █ 
+ █       █       █    █   █    █             █    █   █           █      █      █    █▀▀▀▀ 
+ █       █     ▄▄█▄▄  █   █    ▀▄▄           ▀▄▄  ▀█▄█▀           █    ▄▄█▄▄    ▀▄▄  ▀█▄▄▀ 
 
+*/
+
+int is_print_to_file(int what) {
+  int res = 0;
+
+  switch(what) {
+    case PRTOF_TEXT:      res = PS(PRTOF_TEXT);      break;
+    case PRTOF_GRAPHICS:  res = PS(PRTOF_GRAPHICS);  break;
+    case PRTOF_GR_IN_TXT: res = PS(PRTOF_GR_IN_TXT); break;
+    case PRTOF_NOIR:      res = PS(PRTOF_NOIR);      break;
+  }
+
+  return res;
+}
+
+void set_print_to_file_flag(int what, int val) {
+  switch(what) {
+    case PRTOF_TEXT:      SETBY_PS(val, PRTOF_TEXT);      break;
+    case PRTOF_GRAPHICS:  SETBY_PS(val, PRTOF_GRAPHICS);  break;
+    case PRTOF_GR_IN_TXT: SETBY_PS(val, PRTOF_GR_IN_TXT); break;
+    case PRTOF_NOIR:      SETBY_PS(val, PRTOF_NOIR);      break;
+
+  }
+}
+
+
+#define PRTOF_TXT_BUF_SIZE     (512+128)
+#define PRTOF_GR_BUF_SIZE    (3*512+384)
+
+#define PRTOF_FNAME_SIZE 31
+
+typedef struct {
+  char fname[PRTOF_FNAME_SIZE+1];
+  uint32_t  buf_size;
+  uint32_t  flush_limit;
+  uint32_t  pre_write;
+  uint32_t  len;
+  uint32_t  lines;
+  uint32_t  err_cnt;
+  char buf[];
+} prtof_buf_t;
+
+
+
+prtof_buf_t * prtof_buf[PRTOF_BUF_COUNT] = {NULL, NULL};
+
+
+#define PRTOF_TXT_HDR_SIZE      3 // BOM
+#define PRTOF_BMP_HDR_SIZE    130
+#define PRTOF_BMP_BPL          24
+#define PRTOF_BMP_WIDTH       MAX_82240_WIDTH
+
+
+// full = 1 - do full flush emptying the buffer totally
+// full = 0 - do partial 'by sector' flush 
+void prtof_buf_flush(int what, int full) {
+  prtof_buf_t * buf = prtof_buf[what];
+  FRESULT res;
+  uint wsize, wr, sz;
+  int fail=0, img_h;
+
+  // No buf or no date -> just return
+  if (buf == NULL || buf->len == 0)
+    return;
+
+  if (full || buf->len >= (buf->flush_limit - buf->pre_write)) {
+
+    // Make actual write
+    wsize = full ? buf->len : (buf->flush_limit - buf->pre_write);
+    printf("Writing to buf%i %i bytes, file=%s\n", what, wsize, buf->fname);
+    buf->pre_write = 0;
+
+    sys_disk_write_enable(1);
+
+    res = f_open(ppgm_fp, buf->fname, FA_OPEN_APPEND | FA_WRITE);
+    if ( res != FR_OK ) { buf->err_cnt++; goto prtof_wf_err; }
+
+    // Create initial header
+    if (f_size(ppgm_fp) == 0) {
+      switch (what) {
+        case  PRTOF_GRAPHICS:
+          fail = update_bmp_file_header(ppgm_fp, PRTOF_BMP_WIDTH, 0, BG_COL_PAPER);
+          break;
+        case PRTOF_TEXT:
+          // Write BOM
+          res = f_write(ppgm_fp, "\xEF\xBB\xBF", PRTOF_TXT_HDR_SIZE, &wr);
+          if ( res != FR_OK ) { buf->err_cnt++; goto prtof_wf_err; }
+          break;
+      }
+      if (fail) {
+        buf->err_cnt++;
+        goto prtof_wf_err;
+      }
+    }
+
+    // Seek to the end - just for sure :)
+    res = f_lseek(ppgm_fp, f_size(ppgm_fp));
+    if ( res != FR_OK ) { buf->err_cnt++; goto prtof_wf_err; }
+
+    res = f_write(ppgm_fp, buf->buf, wsize, &wr);
+    if ( res != FR_OK ) { buf->err_cnt++; goto prtof_wf_err; }
+
+    if (what == PRTOF_GRAPHICS) {
+      // Update bmp header
+
+      // Get size
+      sz = f_size(ppgm_fp);
+
+      // Calculate lines (little bit hacky)
+      img_h = (sz-PRTOF_BMP_HDR_SIZE)/PRTOF_BMP_BPL;
+      printf("Update bmp header %ix%i\n", PRTOF_BMP_WIDTH, img_h);
+      fail = update_bmp_file_header(ppgm_fp, PRTOF_BMP_WIDTH, -img_h, BG_COL_PAPER);
+      if (fail) {
+        buf->err_cnt++;
+        goto prtof_wf_err;
+      }
+
+      // Store img lines to buf structure
+      buf->lines = img_h;
+    }
+
+  prtof_wf_err:
+    f_close(ppgm_fp);
+
+    sys_disk_write_enable(0);
+
+    // Update len
+    buf->len -= wsize;
+
+    // Move buffered data
+    if (buf->len)
+      memmove(buf->buf, buf->buf+wsize, buf->len);
+
+  }
+  
+
+}
+
+
+
+int prtof_buf_size(int what) {
+  return what==PRTOF_TEXT ? PRTOF_TXT_BUF_SIZE: PRTOF_GR_BUF_SIZE;
+}
+
+
+int prtof_buf_write(int what, const void * wbuf, int len) {
+  prtof_buf_t * buf = prtof_buf[what];
+
+  if (buf->len + len > buf->buf_size) {
+    len = buf->buf_size - buf->len;
+    // FIXME: report overflow?
+  }
+
+  // Copy data
+  memcpy(buf->buf+buf->len, wbuf, len);
+  buf->len += len;
+
+  prtof_buf_flush(what, PRTOF_LIMIT_FLUSH);
+
+  return 0;
+}
+
+
+
+// Returns 0 if OK, 1 for fail
+int prtof_buf_update(int what) {
+  int buf_size = prtof_buf_size(what);
+  int size = buf_size + sizeof(prtof_buf_t);
+  int val = is_print_to_file(what);
+  prtof_buf_t ** pbuf = prtof_buf + what;
+
+  if (val) {
+    if(pbuf[0] == NULL) {
+      // Allocate
+      pbuf[0] = (prtof_buf_t *)malloc(size);
+      if (pbuf[0] == NULL)
+        return 1; // Fail
+      pbuf[0]->buf_size = buf_size;
+      pbuf[0]->len = 0;
+      pbuf[0]->flush_limit = buf_size & 0xFFFE00;
+      pbuf[0]->pre_write = what == PRTOF_GRAPHICS ? PRTOF_BMP_HDR_SIZE : PRTOF_TXT_HDR_SIZE;
+      pbuf[0]->err_cnt = 0;
+      pbuf[0]->lines = 0;
+    }
+  } else {
+    // Dealloc
+    prtof_buf_flush(what, PRTOF_FULL_FLUSH);
+    free(pbuf[0]);
+    pbuf[0] = NULL;
+  }
+
+  return 0;
+}
+
+
+
+void prtof_add_text(const char *str, int len, int dbl) {
+  prtof_buf_t * buf = prtof_buf[PRTOF_TEXT];
+
+  char * pa = buf->buf+buf->len;
+  char * p = pa;
+
+  for(int x=0; x<len; x++) {
+    p += hp2utfchar(p, str[x]);
+    if (dbl) *p++ = ' ';
+  }
+  p += hp2utfchar(p, '\n');
+
+  buf->len += p-pa;
+
+  prtof_buf_flush(PRTOF_TEXT, PRTOF_LIMIT_FLUSH);
+}
+
+
+/* Bit order: 01
+              23
+*/
+
+const char * box_chars[16] = {
+  " ", "▘", "▝", "▀",    "▖", "▌", "▞", "▛",
+  "▗", "▚", "▐", "▜",    "▄", "▙", "▟", "▇"};
+
+
+void prtof_add_gr_text(const char *bits, int bpl, int width, int height) {
+  prtof_buf_t * buf = prtof_buf[PRTOF_TEXT];
+
+  printf("add_gr_text: %ix%i bpl=%i at %i\n", width, height, bpl, (int)buf->len);
+
+  height &= 0xfffe; // Height should be even
+
+  if (!height) return;
+
+  for(int y=0; y<height; y+=2) {
+    char * pa = buf->buf+buf->len;
+    char * p = pa;
+
+    for(int x=0; x<bpl; x++) {
+      int b2 = bits[x];
+      int b1 = bits[x+bpl];
+
+      for(int b=0; b<4; b++) {
+        int a = ((b1&3)<<2)|(b2&3);
+        //strcpy(p, box_chars[a]);
+        *(int *)p = *(int*)(box_chars[a]);
+        p+= a ? 3 : 1;
+        b1>>=2; b2>>=2;
+      }
+    }
+    bits += 2*bpl;
+
+    p += hp2utfchar(p, '\n');
+    buf->len += p-pa;
+    prtof_buf_flush(PRTOF_TEXT, PRTOF_LIMIT_FLUSH);
+  }
+}
+
+
+void prtof_add_graphics_lines(const char *bits, int bytesperline, int width, int height) {
+  prtof_buf_t * buf = prtof_buf[PRTOF_GRAPHICS];
+
+  char * pa = buf->buf+buf->len;
+  char * p = pa;
+  int bpl = min(bytesperline, PRTOF_BMP_BPL);
+  int pad = max(0, PRTOF_BMP_BPL-bpl);
+
+  printf("add_gr_lines: %ix%i bpl=%i at %i | bpl=%i pad=%i\n", width, height, bytesperline, (int)buf->len, bpl, pad);
+
+  for(int y=0; y<height; y++) {
+    for(int x=0; x<bpl; x++)
+      p[x] = reverse_byte(bits[x]);
+    p += bpl;
+    if (pad) {
+      memset(p, 0, pad);
+      p += pad;
+    }
+    bits += bytesperline;
+  }
+
+  buf->len += p-pa;
+
+  prtof_buf_flush(PRTOF_GRAPHICS, PRTOF_LIMIT_FLUSH);
+}
+
+
+
+
+int prtof_buf_init_fname(int what) {
+  const char * ext;
+  prtof_buf_t * buf = prtof_buf[what];
+
+  if ( check_create_dir(PRINT_DIR) )
+    return 1;
+
+  ext = what == PRTOF_GRAPHICS ? PRINT_GR_EXT : PRINT_TXT_EXT;
+  make_date_filename(buf->fname, PRINT_DIR, ext);
+
+  return 0;
+}
+
+
+
+
+void set_print_to_file(int what, int val, int gui) {
+  const char * msg = NULL;
+  int res = 0;
+
+  if (what >= PRTOF_BUF_COUNT) {
+    set_print_to_file_flag(what, val);
+    return;
+  }
+
+  // Arg check
+  if (what < 0 || what >= PRTOF_BUF_COUNT)
+    return;
+
+  // Deallocate first forcing flush and preparing new filename
+  set_print_to_file_flag(what, 0);
+  prtof_buf_update(what);
+
+  if (val) {
+    set_print_to_file_flag(what, 1);
+    res = prtof_buf_update(what);
+    if (res) {
+      msg = "Cannot allocate memory";
+      goto set_ptf_err;
+    }
+
+    res = prtof_buf_init_fname(what);
+    if (res) {
+      msg = "Cannot create /PRINTS directory";
+      goto set_ptf_err;
+    }
+    // Buffer ready
+
+  }
+
+
+
+set_ptf_err:
+
+  if (msg) {
+    // Fail -> return value back to zero
+    if (val) {
+      set_print_to_file_flag(what, 0);
+      prtof_buf_update(what); // Dealloc if allocated
+    }
+
+    // Report to GUI if enabled
+    if (gui) {
+      lcd_for_dm42(DISP_PRBUF_ALLOC_FAIL);
+      lcd_puts(t24, msg);
+      lcd_puts(t24, "");
+      lcd_print(t24,"(Buffer size %i bytes)", prtof_buf_size(what));
+      lcd_puts(t24, "Press a key to continue");
+      lcd_refresh();
+      wait_for_key_press();
+    }
+  }
+
+}
+
+
+
+/*
+  ▄▄▄▄                                ▄             ▄             ▄▀▀               
+ █▀   ▀  ▄▄▄   ▄   ▄   ▄▄▄    ▄▄▄   ▄▄█▄▄   ▄▄▄   ▄▄█▄▄         ▄▄█▄▄  ▄ ▄▄    ▄▄▄  
+ ▀█▄▄▄  ▀   █  ▀▄ ▄▀  █▀  █  █   ▀    █    ▀   █    █             █    █▀  █  █   ▀ 
+     ▀█ ▄▀▀▀█   █▄█   █▀▀▀▀   ▀▀▀▄    █    ▄▀▀▀█    █             █    █   █   ▀▀▀▄ 
+ ▀▄▄▄█▀ ▀▄▄▀█    █    ▀█▄▄▀  ▀▄▄▄▀    ▀▄▄  ▀▄▄▀█    ▀▄▄           █    █   █  ▀▄▄▄▀ 
+
+*/
+ 
 
 // 0 - OK
 int savestat_init_read() {
@@ -2447,6 +2928,11 @@ void program_main() {
           dat.flags |= ST(STAT_SLOW_AUTOREP) ? SAVESTAT_FLAG_SLOW_AUTOREP : 0;
           dat.flags |= PS(PERM_MAIN_MENU) ? SAVESTAT_PERM_MAIN_MENU : 0;
 
+          dat.flags |= PS(PRTOF_TEXT)      ? SAVESTAT_PRTOF_TXT    : 0;
+          dat.flags |= PS(PRTOF_GRAPHICS)  ? SAVESTAT_PRTOF_GR     : 0;
+          dat.flags |= PS(PRTOF_NOIR)      ? SAVESTAT_PRTOF_NOIR   : 0;
+          dat.flags |= PS(PRTOF_GR_IN_TXT) ? SAVESTAT_PRTOF_GR_IN_TXT : 0;
+
           // Top-bar header - DOW/DATE/TIME inverted as they are by default displayed
           dat.flags |=  PS(DISP_STATFN)   ? SAVESTAT_DISP_STATFN   : 0;
           dat.flags |= !PS(DISP_DOW)      ? SAVESTAT_DISP_DOW      : 0;
@@ -2594,6 +3080,11 @@ void program_main() {
           //SETBY_ST(dat.flags & SAVESTAT_FLAG_BEEP_MUTE, STAT_BEEP_MUTE);
           runner_key_tout_init(dat.flags & SAVESTAT_FLAG_SLOW_AUTOREP);
           SETBY_PS(dat.flags & SAVESTAT_PERM_MAIN_MENU, PERM_MAIN_MENU);
+
+          set_print_to_file(PRTOF_TEXT, dat.flags & SAVESTAT_PRTOF_TXT, 0);
+          set_print_to_file(PRTOF_GRAPHICS, dat.flags & SAVESTAT_PRTOF_GR, 0);
+          set_print_to_file(PRTOF_NOIR, dat.flags & SAVESTAT_PRTOF_NOIR, 0);
+          set_print_to_file(PRTOF_GR_IN_TXT, dat.flags & SAVESTAT_PRTOF_GR_IN_TXT, 0);
 
           // Top-Bar header DOW/DATE/TIME negative as those are displayed by default 
           SETBY_PS(  (dat.flags & SAVESTAT_DISP_STATFN), DISP_STATFN);

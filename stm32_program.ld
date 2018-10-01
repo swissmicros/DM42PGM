@@ -48,14 +48,20 @@ SECTIONS
     _qspi_start = .;   /* create a global symbol at qspi start */
     *(.qspi)           /* .qspi sections */
     *(.qspi*)          /* .qspi* sections */
-/* ==== Symbols to QSPI === */
+/* ==== Symbols to QSPI - in direct order === */
     *(.rodata.__bid_mod10_18_tbl)
     *(.rodata.__bid_convert_table)
-    *(.rodata.bid_log_table_?)
+    *(.rodata.bid_log_table_1)
+    *(.rodata.bid_log_table_2)
     *(.rodata.bid_decimal128_moduli)
-    *(.rodata.bid_exponents*)
-    *(.rodata.bid_breakpoints*)
-    *(.rodata.bid_multipliers*)
+    *(.rodata.bid_exponents_bid64)
+    *(.rodata.bid_exponents_binary128)
+    *(.rodata.bid_breakpoints_binary128)
+    *(.rodata.bid_breakpoints_bid64)
+    *(.rodata.bid_multipliers1_binary128)
+    *(.rodata.bid_multipliers2_bid64)
+    *(.rodata.bid_multipliers1_bid64)
+    *(.rodata.bid_multipliers2_binary128)
 /* ======================== */
     . = ALIGN(8);
     _qspi_end = .;         /* define a global symbols at end of qspi */

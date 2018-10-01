@@ -1,43 +1,43 @@
 /*
 
-  Copyright (c) 2018 SwissMicros GmbH
+BSD 3-Clause License
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
+Copyright (c) 2018, SwissMicros
+All rights reserved.
 
-  1. Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-  2. Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in
-     the documentation and/or other materials provided with the
-     distribution.
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
 
-  3. Neither the name of the copyright holder nor the names of its
-     contributors may be used to endorse or promote products derived
-     from this software without specific prior written permission.
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
 
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
-  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-  OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-  IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE.
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-  The SDK and related material is released as “NOMAS”  (NOt MAnufacturer Supported).
+  The software and related material is released as “NOMAS”  (NOt MAnufacturer Supported). 
 
   1. Info is released to assist customers using, exploring and extending the product
   2. Do NOT contact the manufacturer with questions, seeking support, etc. regarding
      NOMAS material as no support is implied or committed-to by the Manufacturer
-  3. The Manufacturer may reply and/or update materials if and when needed solely at
-     their discretion
+  3. The Manufacturer may reply and/or update materials if and when needed solely
+     at their discretion
 
 */
 
@@ -101,6 +101,15 @@ int lcd_for_dm42(int what) {
       lcd_puts(t24, "Unhandled memory allocation:");
       break;
 
+    case DISP_PRBUF_ALLOC_FAIL:
+      lcd_putsR(t24, "Print Buffer Fail");
+      t24->y += 4;
+      lcd_puts(t24, "Cannot prepare buffer for");
+      lcd_puts(t24, "printing to file.");
+      lcd_puts(t24, "ERROR:");
+      break;
+      
+
     case DISP_NO_PGM_SEL:
       lcd_putsR(t24, "Select Programs");
       t24->y += 4;
@@ -142,7 +151,7 @@ int lcd_for_dm42(int what) {
       lcd_print(t20, "%s (C) 2004-2018, Thomas Okken", free42_version_str());
       t20->y += h2;
       lcd_puts(t20, "Intel Decimal Floating-Point Math Lib v2.0");
-      lcd_puts(t20, "  (C) 2007-2011, Intel Corp.");
+      lcd_puts(t20, "  (C) 2007-2018, Intel Corp.");
 
       t20->y = LCD_Y - lcd_lineHeight(t20);
       lcd_putsR(t20, "    Press EXIT key to continue...");
@@ -645,6 +654,7 @@ pgm_exp_fail:
 const uint8_t mid_menu[] = {
     MI_FILE,
     MI_STATEFILE,
+    MI_PRINT_MENU,
     MI_SETTINGS,
     MI_SYSTEM_ENTER,
     MI_ABOUT_PGM,
@@ -658,6 +668,13 @@ const uint8_t mid_file[] = {
     MI_DISK_INFO,
     0 }; // Terminator
 
+
+const uint8_t mid_print[] = {
+    MI_PRTOF_GRAPH,
+    MI_PRTOF_TEXT,
+    MI_PRTOF_GR_IN_TXT,
+    MI_PRTOF_NOIR,
+    0 }; // Terminator
 
 
 const uint8_t mid_statefile[] = {
@@ -738,6 +755,7 @@ int stack_menu_index() {
 
 const smenu_t         MID_MENU = { "Setup",  mid_menu,   NULL, NULL };
 const smenu_t         MID_FILE = { "File",   mid_file,   NULL, NULL };
+const smenu_t        MID_PRINT = { "Print to File", mid_print, NULL, NULL };
 const smenu_t     MID_SETTINGS = { "Settings",  mid_settings,  NULL, NULL};
 const smenu_t MID_STACK_CONFIG = { "Stack Layout", mid_stack, NULL, NULL};
 const smenu_t    MID_STATEFILE = { "Calculator State", mid_statefile, NULL, NULL};
@@ -795,6 +813,30 @@ int run_menu_item(uint8_t line_id) {
     break;
   case MI_STATEFILE:
     ret = handle_menu(&MID_STATEFILE,MENU_ADD, 0);
+    break;
+
+  case MI_MSC:
+    // Flush printer buffers before entering MSC
+    prtof_buf_flush(PRTOF_GRAPHICS, PRTOF_FULL_FLUSH);
+    prtof_buf_flush(PRTOF_TEXT, PRTOF_FULL_FLUSH);
+    ret = MRET_UNIMPL; // Leave the action to core
+    break;
+
+  case MI_PRINT_MENU:
+    ret = handle_menu(&MID_PRINT,MENU_ADD, 0);
+    break;
+
+  case MI_PRTOF_GRAPH:
+    set_print_to_file(PRTOF_GRAPHICS, !is_print_to_file(PRTOF_GRAPHICS), 1);
+    break;
+  case MI_PRTOF_TEXT:
+    set_print_to_file(PRTOF_TEXT, !is_print_to_file(PRTOF_TEXT), 1);
+    break;
+  case MI_PRTOF_NOIR:
+    set_print_to_file(PRTOF_NOIR, !is_print_to_file(PRTOF_NOIR), 1);
+    break;
+  case MI_PRTOF_GR_IN_TXT:
+    set_print_to_file(PRTOF_GR_IN_TXT, !is_print_to_file(PRTOF_GR_IN_TXT), 1);
     break;
 
   /* Stack */
@@ -969,6 +1011,12 @@ const char * menu_line_str(uint8_t line_id, char * s, const int slen) {
   case MI_SA_REG_T:     ln = nr_str(s, "Font Size Offset Reg T", get_reg_font_offset(LINE_REG_T) ); break;
   case MI_SA_REG_L:     ln = nr_str(s, "Font Size Offset Reg L", get_reg_font_offset(LINE_REG_L) ); break;
   case MI_SA_REG_A:     ln = nr_str(s, "Font Size Offset Reg A", get_reg_font_offset(LINE_REG_A) ); break;
+
+  case MI_PRINT_MENU:      ln = "Print to File >"; break;
+  case MI_PRTOF_GRAPH:     ln = opt_str(s, " Graphics Print",    is_print_to_file(PRTOF_GRAPHICS));  break;
+  case MI_PRTOF_TEXT:      ln = opt_str(s, " Text Print",        is_print_to_file(PRTOF_TEXT));      break;
+  case MI_PRTOF_NOIR:      ln = opt_str(s, " Don't print to IR", is_print_to_file(PRTOF_NOIR));      break;
+  case MI_PRTOF_GR_IN_TXT: ln = opt_str(s, " Graphics in Text",  is_print_to_file(PRTOF_GR_IN_TXT)); break;
 
   default:
     ln = NULL;

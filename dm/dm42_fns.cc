@@ -1417,6 +1417,15 @@ void clear_tlcd_row(int row) {
 }
 
 
+int tlcd_row_empty(int row) {
+  int x = 0;
+  while (tlcd[row][x++] == ' ') {
+    if (x == LCD_HP_CHARS) return 1;
+  }
+  return 0;
+}
+
+
 /*
  ptrn  - pattern bytes by columns
  mask  - mask for current line
@@ -2518,8 +2527,9 @@ void disp_regs(int what) {
       // Ignore continuation lines while in edit mode
       if (!is_pgm_mode() && is_edit && tlcd[j][0] == 0x1a) continue;
       
-      // Ignore if line is empty
-      char * t = tlcd[j]; while(*t==' ') t++; if (*t == 0) continue;
+      // Ignore if line is empty - but skip for first line if alpha mode active
+      if ( ( alpha_table == ALPHA_INACTIVE || j!=0 ) && tlcd_row_empty(j) )
+        continue;
 
       len = hp2font(bb,tlcd[j],LCD_HP_CHARS); bb[len] = 0;
 

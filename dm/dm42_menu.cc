@@ -151,7 +151,7 @@ int lcd_for_dm42(int what) {
       lcd_print(t20, "%s (C) 2004-2018, Thomas Okken", free42_version_str());
       t20->y += h2;
       lcd_puts(t20, "Intel Decimal Floating-Point Math Lib v2.0");
-      lcd_puts(t20, "  (C) 2007-2018, Intel Corp.");
+      lcd_puts(t20, "  (C) 2007-2011, Intel Corp.");
 
       t20->y = LCD_Y - lcd_lineHeight(t20);
       lcd_putsR(t20, "    Press EXIT key to continue...");

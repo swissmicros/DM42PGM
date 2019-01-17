@@ -345,7 +345,7 @@ typedef struct {
 
 // ----------------------------------
 
-#define PLATFORM_VERSION "3.10"
+#define PLATFORM_VERSION "3.12"
 
 // System interface version
 #define PLATFORM_IFC_CNR   3
@@ -549,6 +549,8 @@ extern const smenu_t   MID_BASE_SETUP; // System setup menu
 #define MI_PGM_LOAD        221
 
 #define MI_RUN_DMCP        222
+
+#define MI_OFF_MODE        223
 // --------------------------------
 
 

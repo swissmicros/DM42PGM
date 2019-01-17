@@ -2321,6 +2321,7 @@ void set_reg_font(int offset) {
     fReg->ya++;
   if (fnr >= 0 && is_pgm_mode() )
     fReg->yb = -1;
+  if (fnr == 5) { fReg->yb-=1; fReg->ya-=1; }
 }
 
 
@@ -2513,6 +2514,8 @@ void disp_regs(int what) {
 
   }
 
+  // Reset font size
+  set_reg_font(0);
 
   // == Draw the top text lines ==
   if ( !is_pgm_mode() && (!is_goose() || (is_goose() && (refresh_mask & LCD_UPD_GOOSE))) ) {

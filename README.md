@@ -1,5 +1,7 @@
 # DM42PGM - Free42 frontend implementation for DM42
 
+- There is DMCP interface doc in progress see [DMCP IFC doc](http://www.swissmicros.com/dm42/doc/DMCP-ifc-html/).
+
 # Architecture Overview
 ## Structure
 The DM Calculator Platform (DMCP) is the OS for the DM42 calculator and comes as a binary file DMCP_flash_X.Y.bin.

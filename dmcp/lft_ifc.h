@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2018, SwissMicros
+Copyright (c) 2015-2019, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -196,3 +196,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define update_bmp_file_header (*(typeof(update_bmp_file_header)*)(LIBRARY_FN_BASE+600))
 #define make_date_filename (*(typeof(make_date_filename)*)(LIBRARY_FN_BASE+604))
 #define reverse_byte (*(typeof(reverse_byte)*)(LIBRARY_FN_BASE+608))
+#define f_rename (*(typeof(f_rename)*)(LIBRARY_FN_BASE+612))
+#define file_size (*(typeof(file_size)*)(LIBRARY_FN_BASE+616))
+#define start_timer2 (*(typeof(start_timer2)*)(LIBRARY_FN_BASE+620))
+#define start_timer3 (*(typeof(start_timer3)*)(LIBRARY_FN_BASE+624))
+#define stop_timer2 (*(typeof(stop_timer2)*)(LIBRARY_FN_BASE+628))
+#define stop_timer3 (*(typeof(stop_timer3)*)(LIBRARY_FN_BASE+632))
+#define __sysfn_suspended_bg_key_read (*(typeof(suspended_bg_key_read)*)(LIBRARY_FN_BASE+636))
+#define __sysfn_resume_bg_key_read (*(typeof(resume_bg_key_read)*)(LIBRARY_FN_BASE+640))
+#define lcd_refresh_dma (*(typeof(lcd_refresh_dma)*)(LIBRARY_FN_BASE+644))
+#define lcd_refresh_wait (*(typeof(lcd_refresh_wait)*)(LIBRARY_FN_BASE+648))
+#define lcd_textToBox (*(typeof(lcd_textToBox)*)(LIBRARY_FN_BASE+652))
+#define item_sel_init (*(typeof(item_sel_init)*)(LIBRARY_FN_BASE+656))
+#define item_sel_reinit (*(typeof(item_sel_reinit)*)(LIBRARY_FN_BASE+660))
+#define item_sel_header (*(typeof(item_sel_header)*)(LIBRARY_FN_BASE+664))
+#define item_sel_engine (*(typeof(item_sel_engine)*)(LIBRARY_FN_BASE+668))
+#define sys_flashing_init (*(typeof(sys_flashing_init)*)(LIBRARY_FN_BASE+672))
+#define sys_flashing_finish (*(typeof(sys_flashing_finish)*)(LIBRARY_FN_BASE+676))
+#define sys_flash_erase_block (*(typeof(sys_flash_erase_block)*)(LIBRARY_FN_BASE+680))
+#define sys_flash_write_block (*(typeof(sys_flash_write_block)*)(LIBRARY_FN_BASE+684))
+#define msg_box (*(typeof(msg_box)*)(LIBRARY_FN_BASE+688))
+#define write_buf_size (*(typeof(write_buf_size)*)(LIBRARY_FN_BASE+692))

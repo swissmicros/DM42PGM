@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2018, SwissMicros
+Copyright (c) 2015-2019, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -140,6 +140,7 @@ FRESULT f_close (FIL* fp);											/* Close an open file object */
 FRESULT f_read (FIL* fp, void* buff, UINT btr, UINT* br);			/* Read data from the file */
 FRESULT f_write (FIL* fp, const void* buff, UINT btw, UINT* bw);	/* Write data to the file */
 FRESULT f_lseek (FIL* fp, FSIZE_t ofs);								/* Move file pointer of the file object */
+FRESULT f_rename (const TCHAR* path_old, const TCHAR* path_new);	/* Rename/Move a file or directory */
 
 #define f_size(fp) ((fp)->obj.objsize)
 #define f_tell(fp) ((fp)->fptr)

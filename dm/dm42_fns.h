@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2018, SwissMicros
+Copyright (c) 2015-2019, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -128,8 +128,12 @@ int set_reg_font_offset(int line_reg_nr, int offs);
 #define PRTOF_TEXT       0
 #define PRTOF_GRAPHICS   1
 #define PRTOF_BUF_COUNT  2
+
 #define PRTOF_GR_IN_TXT  6
 #define PRTOF_NOIR       7
+#define PRINT_DBLNL      8
+
+
 
 int is_print_to_file(int what);
 void set_print_to_file(int what, int val, int gui);
@@ -159,6 +163,11 @@ void copy_reset_state_filename(char *s, int maxlen);
 
 // Force to redraw calc LCD
 void calc_lcd_redraw();
+
+
+#define AUX_BUF_PGM_LIST_SIZE (3*512)
+#define AUX_BUF_SELS_SIZE       (512)
+
 
 #ifndef max
 #define max(x,y) ({ \

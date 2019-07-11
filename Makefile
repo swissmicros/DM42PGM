@@ -104,9 +104,9 @@ LDSCRIPT = stm32_program.ld
 # libraries
 #LIBS = -lc -lm -lnosys
 LIBDIR =
-LDFLAGS = $(CPUFLAGS) -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections \
-  -Wl,--wrap=_malloc_r
-# -specs=nano.specs
+LDFLAGS += $(CPUFLAGS) -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref
+LDFLAGS += -specs=nano.specs
+LDFLAGS += -Wl,--gc-sections -Wl,--wrap=_malloc_r
 
 
 # default action: build all

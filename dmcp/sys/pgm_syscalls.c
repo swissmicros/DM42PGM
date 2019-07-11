@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2018, SwissMicros
+Copyright (c) 2015-2019, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -57,6 +57,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 void Program_Entry();
 
+#ifndef PROGRAM_KEYMAP_ID
+#define PROGRAM_KEYMAP_ID 0xffffffff
+#endif
+
 prog_info_t const prog_info = {
 	PROG_INFO_MAGIC,       // uint32_t pgm_magic;
 	0,                     // uint32_t pgm_size;
@@ -66,7 +70,8 @@ prog_info_t const prog_info = {
 	QSPI_DATA_SIZE,        // uint32_t qspi_size;
 	QSPI_DATA_CRC,         // uint32_t qspi_crc;
 	PROGRAM_NAME,          // char pgm_name[16];
-	PROGRAM_VERSION        // char pg
+	PROGRAM_VERSION,       // char pgm_version[16];
+	PROGRAM_KEYMAP_ID      // uint32_t required_keymap_id;
 };
 
 

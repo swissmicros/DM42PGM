@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2018, SwissMicros
+Copyright (c) 2015-2019, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -136,6 +136,18 @@ int lcd_for_dm42(int what) {
       lcd_putsAt(t24, 7,"    Press EXIT key to continue...");
       break;
 
+    case DISP_NEW_HELP:
+      lcd_putsR(t24, "Missing help file");
+      lcd_puts(t24, "");
+      lcd_puts(t24, "Help file /HELP/dm42help.htm is");
+      lcd_puts(t24, "missing. Please, download it from");
+      lcd_puts(t24, "https://www.swissmicros.com/dm42/");
+      lcd_puts(t24, "fat/HELP/");
+      lcd_puts(t24, "and place it into /HELP/ directory.");
+      t24->y = LCD_Y; lcd_prevLn(t24);
+      lcd_puts(t24, "    Press a key to continue...");
+      break;
+
     case DISP_ABOUT:
       // Just base of original system about
       lcd_for_calc(DISP_ABOUT);
@@ -148,10 +160,10 @@ int lcd_for_dm42(int what) {
       t20->y += h2;
       lcd_print(t20, "DM42 v" DM42_VERSION " (C) SwissMicros GmbH");
       t20->y += h2;
-      lcd_print(t20, "%s (C) 2004-2018, Thomas Okken", free42_version_str());
+      lcd_print(t20, "%s (C) 2004-2019, Thomas Okken", free42_version_str());
       t20->y += h2;
-      lcd_puts(t20, "Intel Decimal Floating-Point Math Lib v2.0");
-      lcd_puts(t20, "  (C) 2007-2011, Intel Corp.");
+      lcd_puts(t20, "Intel Decimal FloatingPointMath Lib v2.0u1");
+      lcd_puts(t20, "  (C) 2007-2018, Intel Corp.");
 
       t20->y = LCD_Y - lcd_lineHeight(t20);
       lcd_putsR(t20, "    Press EXIT key to continue...");
@@ -167,55 +179,28 @@ int lcd_for_dm42(int what) {
 
 
 
-#if 0 // Template screen
-void template_screen() {
-  char bb[32];
-  font_t *f=font_lm18;;
-  int k1,y=0;
-
-  lcd_offset = 0;
-  lcd_clear_buf();
-  lcdPutsR("Screen title");
-  
-  for(;;) {
-    k1 = runner_get_key(NULL);
-    if ( k1 == KEY_EXIT ) break;
-    if ( is_menu_auto_off() ) break;
-
-    nr=-1;
-    switch (k1) {
-      case KEY_F1: // A - 
-        break;
-      case KEY_F2: // B - 
-        break;
-      case KEY_F3: // C - 
-        break;
-      case KEY_F4: // D - 
-        break;
-      case KEY_F5: // E - 
-        break;
-      case KEY_F6: // F - 
-        break;
-      case KEY_BSP: nr=10; break;
-    }
 
 
-    {
-      
-      // Menu line
-      lcd_offset = 16;
-      lcdPutsRAt(8, " xx | xx | xxx | xxx  | xxx | xx ");
-      lcd_offset = 0;
+#define DM42_HELP_FILE  "/HELP/dm42help.htm"
 
-      // display
-      lcd_refresh();
+void start_help() {
+
+  // Check whether DM42_HELP_FILE exists
+  if (!file_exists(DM42_HELP_FILE)) {
+    if (file_exists(HELP_INDEX)) {
+      // Rename old help file to new one
+      sys_disk_write_enable(1);
+      f_rename(HELP_INDEX, DM42_HELP_FILE);
+      sys_disk_write_enable(0);
+    } else {
+      // No help file -> display note
+      lcd_for_dm42(DISP_NEW_HELP);
+      wait_for_key_press();
+      return;
     }
   }
+  run_help_file(DM42_HELP_FILE);
 }
-#endif
-
-
-
 
 
 
@@ -331,7 +316,7 @@ void run_reset_state_file() {
 
   for(;;) {
     int k1 = runner_get_key(NULL);
-    if ( k1 == KEY_EXIT )
+    if ( IS_EXIT_KEY(k1) )
       return;
     if ( is_menu_auto_off() )
       return;
@@ -367,13 +352,17 @@ int load_statefile(const char * fpath, const char * fname, void * data) {
 
   for(;;) {
     int k1 = runner_get_key(NULL);
-    if ( k1 == KEY_EXIT )
+    if ( IS_EXIT_KEY(k1) )
       return 0; // Continue the selection screen
     if ( is_menu_auto_off() )
       return MRET_EXIT; // Leave selection screen
     if ( k1 == KEY_ENTER )
       break; // Proceed with load
   }
+
+  lcd_putsRAt(t24, 6, "  Loading ...");
+  lcd_refresh_wait();
+
 
   // Store statefile name for next load
   set_reset_state_file(fpath);
@@ -444,7 +433,7 @@ int select_programs(const char * title, int * pgm_indices, int * pgm_cnt) {
 
   for(;;) {
     k1 = runner_get_key(NULL);
-    if ( k1 == KEY_EXIT ) break;
+    if ( IS_EXIT_KEY(k1) ) break;
     if ( is_menu_auto_off() ) break;
 
     switch (k1) {
@@ -674,6 +663,7 @@ const uint8_t mid_print[] = {
     MI_PRTOF_TEXT,
     MI_PRTOF_GR_IN_TXT,
     MI_PRTOF_NOIR,
+    MI_PRINT_DBLNL,
     0 }; // Terminator
 
 
@@ -755,7 +745,7 @@ int stack_menu_index() {
 
 const smenu_t         MID_MENU = { "Setup",  mid_menu,   NULL, NULL };
 const smenu_t         MID_FILE = { "File",   mid_file,   NULL, NULL };
-const smenu_t        MID_PRINT = { "Print to File", mid_print, NULL, NULL };
+const smenu_t        MID_PRINT = { "Printing", mid_print, NULL, NULL };
 const smenu_t     MID_SETTINGS = { "Settings",  mid_settings,  NULL, NULL};
 const smenu_t MID_STACK_CONFIG = { "Stack Layout", mid_stack, NULL, NULL};
 const smenu_t    MID_STATEFILE = { "Calculator State", mid_statefile, NULL, NULL};
@@ -837,6 +827,9 @@ int run_menu_item(uint8_t line_id) {
     break;
   case MI_PRTOF_GR_IN_TXT:
     set_print_to_file(PRTOF_GR_IN_TXT, !is_print_to_file(PRTOF_GR_IN_TXT), 1);
+    break;
+  case MI_PRINT_DBLNL:
+    set_print_to_file(PRINT_DBLNL, !is_print_to_file(PRINT_DBLNL), 1);
     break;
 
   /* Stack */
@@ -1012,11 +1005,12 @@ const char * menu_line_str(uint8_t line_id, char * s, const int slen) {
   case MI_SA_REG_L:     ln = nr_str(s, "Font Size Offset Reg L", get_reg_font_offset(LINE_REG_L) ); break;
   case MI_SA_REG_A:     ln = nr_str(s, "Font Size Offset Reg A", get_reg_font_offset(LINE_REG_A) ); break;
 
-  case MI_PRINT_MENU:      ln = "Print to File >"; break;
+  case MI_PRINT_MENU:      ln = "Printing >"; break;
   case MI_PRTOF_GRAPH:     ln = opt_str(s, " Graphics Print",    is_print_to_file(PRTOF_GRAPHICS));  break;
   case MI_PRTOF_TEXT:      ln = opt_str(s, " Text Print",        is_print_to_file(PRTOF_TEXT));      break;
   case MI_PRTOF_NOIR:      ln = opt_str(s, " Don't print to IR", is_print_to_file(PRTOF_NOIR));      break;
   case MI_PRTOF_GR_IN_TXT: ln = opt_str(s, " Graphics in Text",  is_print_to_file(PRTOF_GR_IN_TXT)); break;
+  case MI_PRINT_DBLNL:     ln = opt_str(s, " Double Newline",    is_print_to_file(PRINT_DBLNL));     break;
 
   default:
     ln = NULL;

@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2018, SwissMicros
+Copyright (c) 2015-2019, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -107,7 +107,7 @@ extern const smenu_t   MID_STACK_AREA; // Stack area config
 #define MI_PRTOF_TEXT      63
 #define MI_PRTOF_GR_IN_TXT 64
 #define MI_PRTOF_NOIR      65
-
+#define MI_PRINT_DBLNL     66
 
 // --------------------------------
 
@@ -122,6 +122,7 @@ extern const smenu_t   MID_STACK_AREA; // Stack area config
 #define DISP_ALLOC_FAIL        103
 #define DISP_NO_PGM_SEL        104
 #define DISP_PRBUF_ALLOC_FAIL  105
+#define DISP_NEW_HELP          106
 
 int lcd_for_dm42(int what);
 
@@ -131,5 +132,8 @@ int run_menu_item(uint8_t line_id);
 
 // After FAT format callback
 void after_fat_format_dm42();
+
+// Start help
+void start_help();
 
 #endif

@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2018, SwissMicros
+Copyright (c) 2015-2019, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -357,10 +357,29 @@ int hp2regs(char *dst, const char *src, int srclen) {
   █▄▄█  █   ▀▄ █ ▀▀ █
  █    █ █    ▀ █    █ */
 
-#ifndef FW_RELEASE
-#define SHELL_DEBUG
-//#define SHELL_DEBUG_STATE_RW
-#define THELL_DEBUG
+
+extern "C" {
+  
+// -- External prototypes
+#include <main.h>
+#include <dmcp.h>
+
+#include <dm42_menu.h>
+#include <dm42_fns.h>
+
+#ifndef assert_param
+#define assert_param(c)
+#endif
+
+// ==== DEBUG
+
+#ifdef DEBUG_THELL
+ //#define SHELL_DEBUG_STATE_RW
+ #define THELL_DEBUG
+#endif
+
+#ifdef DEBUG_SHELL
+ #define SHELL_DEBUG
 #endif
 
 #ifdef SHELL_DEBUG
@@ -387,19 +406,15 @@ int hp2regs(char *dst, const char *src, int srclen) {
 #endif
 
 
+// ==== REGIONS
+#define MARK_42_KEYP            0xd3770101
+#define MARK_42_KEYR            0xd3770102
+#define MARK_42_KEY0            0xd3770103
+#define MARK_42_PGM_LOAD        0xd3770104
+#define MARK_42_PGM_SAVE        0xd3770105
+#define MARK_42_STAT_LOAD       0xd3770106
+#define MARK_42_STAT_SAVE       0xd3770107
 
-extern "C" {
-  
-// -- External prototypes
-#include <main.h>
-#include <dmcp.h>
-
-#include <dm42_menu.h>
-#include <dm42_fns.h>
-
-#ifndef assert_param
-#define assert_param(c)
-#endif
 
 
 // -- Local prototypes --
@@ -496,6 +511,7 @@ volatile  int repeat_timeout;
 #define SAVESTAT_PRTOF_TXT         BIT(19)
 #define SAVESTAT_PRTOF_NOIR        BIT(20)
 #define SAVESTAT_PRTOF_GR_IN_TXT   BIT(21)
+#define SAVESTAT_PRINT_DBLNL       BIT(22)
 
 
 typedef struct {
@@ -572,6 +588,7 @@ FRESULT pgm_res = FR_OK;
 #define PST_PRTOF_GRAPHICS    BIT(10)
 #define PST_PRTOF_NOIR        BIT(11)
 #define PST_PRTOF_GR_IN_TXT   BIT(12)
+#define PST_PRINT_DBLNL       BIT(13)
 
 
 static volatile uint32_t ann_state = 0;
@@ -1084,6 +1101,11 @@ void shell_print(const char *text, int length,
   }
   if ( !is_gr_print ) {
     print_byte(10); // Flush the line
+    if (is_print_to_file(PRINT_DBLNL)) {
+      printer_advance_buf(PRINT_TXT_LN);
+      print_wait_for(PRINT_TXT_LN);
+      print_byte(10); // One more LF
+    }
     if ( is_wide_print() ) {
       print_byte(27); // ESC
       print_byte(252);// Return to normal-width characters
@@ -1402,6 +1424,7 @@ uint8_t is_graphics;
 uint8_t is_show;
 
 void clear_tlcd_row(int row) {
+  DBGTHELL("clear_tlcd_row(%i)\n", row);
   assert_param(row>=0 && row<2);
   memset(tlcd[row],' ',TLCD_LINELEN);
   tlcd[row][TLCD_LINELEN] = 0;
@@ -1498,7 +1521,7 @@ void thell_edit_number(const char * prompt, int prompt_len, const char * line, i
 
 
 void thell_draw_char(int x, int y, char c) {
-  //DBGTHELL("thell_draw_char %i %i : '%s'\n", x,y, str_from_hp(&c,1));
+  DBGTHELL("thell_draw_char %i %i : '%s'\n", x,y, str_from_hp(&c,1));
   assert_param(x>=0 && x<TLCD_LINELEN);
   assert_param(y>=0 && y<2);
 
@@ -1649,6 +1672,8 @@ extern "C"  {
 // -------------
 
 #define CALC_FLAG_AUDIO_ON  26
+#define CALC_FLAG_DMY       31
+#define CALC_FLAG_YMD       67
 
 void dm42_set_beep_mute(int val) {
   set_calc_flag(CALC_FLAG_AUDIO_ON, !val);
@@ -1658,6 +1683,21 @@ int dm42_is_beep_mute() {
   //return ST(STAT_BEEP_MUTE);
   return !get_calc_flag(CALC_FLAG_AUDIO_ON);
 }
+
+
+int dm42_get_dmy() {
+  return get_calc_flag(CALC_FLAG_YMD) ? 2 : get_calc_flag(CALC_FLAG_DMY);
+}
+
+void dm42_set_dmy(int val) {
+  if ( !(val & 2) ) {
+    set_calc_flag(CALC_FLAG_YMD, 0);
+    set_calc_flag(CALC_FLAG_DMY, val);
+  } else {
+    set_calc_flag(CALC_FLAG_YMD, 1);
+  }
+}
+
 
 
 
@@ -1836,6 +1876,7 @@ int is_print_to_file(int what) {
     case PRTOF_GRAPHICS:  res = PS(PRTOF_GRAPHICS);  break;
     case PRTOF_GR_IN_TXT: res = PS(PRTOF_GR_IN_TXT); break;
     case PRTOF_NOIR:      res = PS(PRTOF_NOIR);      break;
+    case PRINT_DBLNL:     res = PS(PRINT_DBLNL);     break;
   }
 
   return res;
@@ -1847,7 +1888,7 @@ void set_print_to_file_flag(int what, int val) {
     case PRTOF_GRAPHICS:  SETBY_PS(val, PRTOF_GRAPHICS);  break;
     case PRTOF_GR_IN_TXT: SETBY_PS(val, PRTOF_GR_IN_TXT); break;
     case PRTOF_NOIR:      SETBY_PS(val, PRTOF_NOIR);      break;
-
+    case PRINT_DBLNL:     SETBY_PS(val, PRINT_DBLNL);     break;
   }
 }
 
@@ -1910,9 +1951,9 @@ void prtof_buf_flush(int what, int full) {
           fail = update_bmp_file_header(ppgm_fp, PRTOF_BMP_WIDTH, 0, BG_COL_PAPER);
           break;
         case PRTOF_TEXT:
-          // Write BOM
-          res = f_write(ppgm_fp, "\xEF\xBB\xBF", PRTOF_TXT_HDR_SIZE, &wr);
-          if ( res != FR_OK ) { buf->err_cnt++; goto prtof_wf_err; }
+          // No more Write BOM
+          //res = f_write(ppgm_fp, "\xEF\xBB\xBF", PRTOF_TXT_HDR_SIZE, &wr);
+          //if ( res != FR_OK ) { buf->err_cnt++; goto prtof_wf_err; }
           break;
       }
       if (fail) {
@@ -2042,11 +2083,19 @@ void prtof_add_text(const char *str, int len, int dbl) {
 
 /* Bit order: 01
               23
+
+  " ", "▘", "▝", "▀",    "▖", "▌", "▞", "▛",
+  "▗", "▚", "▐", "▜",    "▄", "▙", "▟", "█"};
+
+  Changed all chars to \uXXXX notation
+
 */
 
 const char * box_chars[16] = {
-  " ", "▘", "▝", "▀",    "▖", "▌", "▞", "▛",
-  "▗", "▚", "▐", "▜",    "▄", "▙", "▟", "▇"};
+  "\u00A0", "\u2598", "\u259D", "\u2580",
+  "\u2596", "\u258C", "\u259E", "\u259B",
+  "\u2597", "\u259A", "\u2590", "\u259C",
+  "\u2584", "\u2599", "\u259F", "\u2588"};
 
 
 void prtof_add_gr_text(const char *bits, int bpl, int width, int height) {
@@ -2070,7 +2119,7 @@ void prtof_add_gr_text(const char *bits, int bpl, int width, int height) {
         int a = ((b1&3)<<2)|(b2&3);
         //strcpy(p, box_chars[a]);
         *(int *)p = *(int*)(box_chars[a]);
-        p+= a ? 3 : 1;
+        p+= a ? 3 : 2;
         b1>>=2; b2>>=2;
       }
     }
@@ -2606,7 +2655,7 @@ void empty_keydown() {
 // Value in ms
 void setTimeout0(int timeout_type, int value) {
   if ( is_pgm_mode() && !is_slow_autorepeat() && (sys_last_key() == KEY_UP || sys_last_key() == KEY_DOWN) )
-    value = value/2; // Half in pgm mode
+    value = 2*value/3; // 2/3 in pgm mode
   printf("setTimeout0: %i : %i\n",timeout_type, value);
 
   timeout0_type = timeout_type;
@@ -2690,7 +2739,7 @@ void disp_header() {
 
 
   last_header_clk24 = is_clk24();
-  last_header_dmy = is_dmy();
+  last_header_dmy = dm42_get_dmy();
 
   //uint8_t lnfill; // Fill whole lines before writing line
   //uint8_t newln;  // New line after writing line
@@ -2705,10 +2754,10 @@ void disp_header() {
 
   //lcd_printR(t24,"%i:",lll);   // DEBUG! REMOVE!
 /*
-  char s[PRINT_DT_TM_SZ], t[PRINT_DT_TM_SZ];
+  char s[PRINT _DT_TM_SZ], t[PRINT _DT_TM_SZ];
   const char * dowstr = is_disp(DISP_DOW) ? get_wday_shortcut(tm.dow) : "";
-  print_dmy_date(s,PRINT_DT_TM_SZ,&dt,dowstr,get_disp_date_sep());
-  print_clk24_time(t,PRINT_DT_TM_SZ,&tm,0,0);
+  print_dmy_date(s,PRINT_ DT_TM_SZ,&dt,dowstr,get_disp_date_sep());
+  print_clk24_time(t,PRINT_ DT_TM_SZ,&tm,0,0);
 
   lcd_printR(t24,"%s %s", s, t);
 */
@@ -2835,8 +2884,8 @@ void program_main() {
 
   after_fat_format = after_fat_format_dm42;
 
-  is_flag_dmy = is_dmy;
-  set_flag_dmy = set_dmy;
+  get_flag_dmy = dm42_get_dmy;
+  set_flag_dmy = dm42_set_dmy;
   is_flag_clk24 = is_clk24;
   set_flag_clk24 = set_clk24;
   is_beep_mute = dm42_is_beep_mute;
@@ -2851,7 +2900,7 @@ void program_main() {
 
   for(;;)
   {
-    if (last_header_clk24 != is_clk24() || last_header_dmy != is_dmy() )
+    if (last_header_clk24 != is_clk24() || last_header_dmy != dm42_get_dmy() )
       force_header_timeout();
 
     if ( (!ST(STAT_PGM_END) && !keep_running && key_empty()) ||
@@ -2945,6 +2994,7 @@ void program_main() {
           dat.flags |= PS(PRTOF_GRAPHICS)  ? SAVESTAT_PRTOF_GR     : 0;
           dat.flags |= PS(PRTOF_NOIR)      ? SAVESTAT_PRTOF_NOIR   : 0;
           dat.flags |= PS(PRTOF_GR_IN_TXT) ? SAVESTAT_PRTOF_GR_IN_TXT : 0;
+          dat.flags |= PS(PRINT_DBLNL)     ? SAVESTAT_PRINT_DBLNL  : 0;
 
           // Top-bar header - DOW/DATE/TIME inverted as they are by default displayed
           dat.flags |=  PS(DISP_STATFN)   ? SAVESTAT_DISP_STATFN   : 0;
@@ -3098,6 +3148,7 @@ void program_main() {
           set_print_to_file(PRTOF_GRAPHICS, dat.flags & SAVESTAT_PRTOF_GR, 0);
           set_print_to_file(PRTOF_NOIR, dat.flags & SAVESTAT_PRTOF_NOIR, 0);
           set_print_to_file(PRTOF_GR_IN_TXT, dat.flags & SAVESTAT_PRTOF_GR_IN_TXT, 0);
+          set_print_to_file(PRINT_DBLNL, dat.flags & SAVESTAT_PRINT_DBLNL, 0);
 
           // Top-Bar header DOW/DATE/TIME negative as those are displayed by default 
           SETBY_PS(  (dat.flags & SAVESTAT_DISP_STATFN), DISP_STATFN);
@@ -3152,7 +3203,7 @@ void program_main() {
       //  draw_gr_off_image();
       //else 
       {
-        rtc_check_unset();
+        //rtc_check_unset(); // Already done by DMCP ... or?
         calc_lcd_redraw();
       }
 
@@ -3257,7 +3308,7 @@ void program_main() {
           //test_help_fonts();
           //help_demo();
           if ( !ANN(RUN) ) { // We don't want to display help during program run
-            run_help();
+            start_help();
             calc_lcd_redraw();
           } 
           break;
@@ -3313,9 +3364,9 @@ void program_main() {
 
       if ( consume_key ) key = -1;
 
-      if ( redraw && !ANN(RUN) ) {
-        disp_regs(LCD_UPD_DFLT);
-        lcd_refresh();
+      if ( redraw ) { // We want complete update after font size change // && !ANN(RUN)
+        disp_regs(LCD_UPD_ALL); // LCD_UPD_DFLT
+        lcd_refresh_wait();
       }
 
     } // == End of main menu function keys handling

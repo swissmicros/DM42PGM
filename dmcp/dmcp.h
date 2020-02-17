@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2019, SwissMicros
+Copyright (c) 2015-2020, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -351,11 +351,11 @@ typedef struct {
 
 // ----------------------------------
 
-#define PLATFORM_VERSION "3.14"
+#define PLATFORM_VERSION "3.17"
 
 // System interface version
 #define PLATFORM_IFC_CNR   3
-#define PLATFORM_IFC_VER  12
+#define PLATFORM_IFC_VER  13
 
 // STATIC_ASSERT ...
 #define ASSERT_CONCAT_(a, b) a##b
@@ -374,6 +374,7 @@ uint8_t get_hw_id();
 // ==== RTC
 void rtc_read(tm_t * tm, dt_t *dt);
 void rtc_write(tm_t * tm, dt_t *dt);
+void rtc_update_time_sec(int delta_sec);
 uint8_t rtc_read_century();
 void rtc_write_century(uint8_t cent);
 uint8_t rtc_read_min();
@@ -449,6 +450,12 @@ typedef struct {
 
 // Keyboard
 int read_key(int *k1, int *k2);
+
+
+/////////////////////////////////
+// Low level diagnostics 
+/////////////////////////////////
+
 void suspended_bg_key_read();
 void resume_bg_key_read();
 
@@ -462,6 +469,31 @@ void start_timer3(uint16_t div16);
 void stop_timer2();
 void stop_timer3();
 
+//  RTC linear reading
+#define RTCREGS_SS_PER_SEC  256
+
+typedef struct {
+  uint32_t dt;
+  uint32_t tm;
+  uint16_t ss;
+} rtc_time_regs_t;
+
+
+typedef struct {
+  rtc_time_regs_t regs;
+  uint64_t dsec; // julian day * seconds_per_day
+  uint32_t jday; // julian day
+  uint32_t sec;  // seconds in day
+  uint32_t msec; // seconds in day corresponding to current minute (for easy sub-minute updates)
+} rtc_ticks_stat_t;
+
+
+uint32_t get_rtc_ticks();
+rtc_ticks_stat_t* rtc_update_ticks();
+void rtc_set_alarm(tm_t * tm, dt_t *dt);
+void rtc_cancel_alarm();
+
+
 
 // ----------------------------------
 
@@ -474,6 +506,8 @@ void stop_timer3();
 #define DFLT_82240_LINE_DUR 1800
 
 void print_byte(uint8_t b);
+void print_buffer(uint8_t * buf, int cnt);
+int print_is_ready();
 
 // Printer delay in ms
 uint printer_get_delay();
@@ -637,8 +671,8 @@ typedef void fis_name_fn_t(struct item_sel_state *st, list_item_t fis, char * nm
 
 
 typedef struct item_sel_state {
-  int8_t fnr;
-  int8_t top_nr;
+  int fnr;
+  int top_nr;
   int8_t lncnt;      // Number of LCD lines available
   int8_t roll_lines;
   int8_t key;
@@ -673,7 +707,7 @@ void item_sel_header(item_sel_state_t *st, int update);
 
 // ---------------------------------------------------
 
-void msg_box(disp_stat_t * ds, char * txt, int inv);
+void msg_box(disp_stat_t * ds, const char * txt, int inv);
 
 
 // ----------------------------------
@@ -783,6 +817,7 @@ void msg_box(disp_stat_t * ds, char * txt, int inv);
 #define STAT_CLK24             BIT(14)
 #define STAT_POWER_CHANGE      BIT(15)
 #define STAT_YMD               BIT(16)
+#define STAT_ALPHA_TAB_Fn      BIT(17) // 1 - alpha table contains also Fn keys (First row)
 
 
 #define STAT_HW_BEEP           BIT(28)
@@ -926,8 +961,16 @@ int sys_flash_write_block(void* dst_addr, uint8_t * src_buf, uint32_t size);
 
 // ----------------------------------
 
+
 void run_help();
 void run_help_file(const char * help_file);
+
+
+
+typedef void user_style_fn_t(char *s, disp_stat_t *ds);
+
+void run_help_file_style(const char * help_file, user_style_fn_t *user_style_fn);
+
 
 // ----------------------------------
 

@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2019, SwissMicros
+Copyright (c) 2015-2020, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -144,5 +144,10 @@ FRESULT f_rename (const TCHAR* path_old, const TCHAR* path_new);	/* Rename/Move 
 
 #define f_size(fp) ((fp)->obj.objsize)
 #define f_tell(fp) ((fp)->fptr)
+#define f_eof(fp)  ((int)((fp)->fptr == (fp)->obj.objsize))
+
+#ifndef EOF
+#define EOF (-1)
+#endif
 
 #endif

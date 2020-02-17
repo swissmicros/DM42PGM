@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2019, SwissMicros
+Copyright (c) 2015-2020, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -217,3 +217,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define sys_flash_write_block (*(typeof(sys_flash_write_block)*)(LIBRARY_FN_BASE+684))
 #define msg_box (*(typeof(msg_box)*)(LIBRARY_FN_BASE+688))
 #define write_buf_size (*(typeof(write_buf_size)*)(LIBRARY_FN_BASE+692))
+#define get_rtc_ticks (*(typeof(get_rtc_ticks)*)(LIBRARY_FN_BASE+696))
+#define rtc_update_ticks (*(typeof(rtc_update_ticks)*)(LIBRARY_FN_BASE+700))
+#define rtc_set_alarm (*(typeof(rtc_set_alarm)*)(LIBRARY_FN_BASE+704))
+#define rtc_cancel_alarm (*(typeof(rtc_cancel_alarm)*)(LIBRARY_FN_BASE+708))
+#define rtc_update_time_sec (*(typeof(rtc_update_time_sec)*)(LIBRARY_FN_BASE+712))
+#define run_help_file_style (*(typeof(run_help_file_style)*)(LIBRARY_FN_BASE+716))
+#define print_buffer (*(typeof(print_buffer)*)(LIBRARY_FN_BASE+720))
+#define print_is_ready (*(typeof(print_is_ready)*)(LIBRARY_FN_BASE+724))

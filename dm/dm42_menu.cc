@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2019, SwissMicros
+Copyright (c) 2015-2020, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -114,7 +114,7 @@ int lcd_for_dm42(int what) {
       lcd_putsR(t24, "Select Programs");
       t24->y += 4;
       lcd_putsAt(t24, 3, "No program selected");
-      lcd_putsAt(t24, 7, "Press a key to continue...");
+      lcd_putsAt(t24, 7, "Press any key to continue...");
     break;
 
     case DISP_LOADING_STATE:
@@ -145,7 +145,7 @@ int lcd_for_dm42(int what) {
       lcd_puts(t24, "fat/HELP/");
       lcd_puts(t24, "and place it into /HELP/ directory.");
       t24->y = LCD_Y; lcd_prevLn(t24);
-      lcd_puts(t24, "    Press a key to continue...");
+      lcd_puts(t24, "  Press any key to continue...");
       break;
 
     case DISP_ABOUT:
@@ -160,7 +160,7 @@ int lcd_for_dm42(int what) {
       t20->y += h2;
       lcd_print(t20, "DM42 v" DM42_VERSION " (C) SwissMicros GmbH");
       t20->y += h2;
-      lcd_print(t20, "%s (C) 2004-2019, Thomas Okken", free42_version_str());
+      lcd_print(t20, "%s (C) 2004-2020, Thomas Okken", free42_version_str());
       t20->y += h2;
       lcd_puts(t20, "Intel Decimal FloatingPointMath Lib v2.0u1");
       lcd_puts(t20, "  (C) 2007-2018, Intel Corp.");
@@ -223,7 +223,9 @@ int pgm_import_enter(const char * fpath, const char * fname, void * data) {
 #ifdef FREE42_PRE_2016_IFC
     core_import_programs(NULL);
 #else
-    core_import_programs();
+    init_sf_buf();
+    core_import_programs(0, NULL);
+    deinit_sf_buf();
 #endif
 
     f_close(ppgm_fp);
@@ -274,7 +276,9 @@ int pgm_export_enter(const char * fpath, const char * fname, void * data) {
 #ifdef FREE42_PRE_2016_IFC
     res = core_export_programs(pgm_sel->pgm_cnt, pgm_sel->pgm_indices, NULL);
 #else
-    core_export_programs(pgm_sel->pgm_cnt, pgm_sel->pgm_indices);
+    init_sf_buf();
+    core_export_programs(pgm_sel->pgm_cnt, pgm_sel->pgm_indices, NULL);
+    deinit_sf_buf();
     res = 0;
 #endif
     f_close(ppgm_fp);

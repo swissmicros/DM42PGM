@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2019, SwissMicros
+Copyright (c) 2015-2020, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -135,5 +135,10 @@ void after_fat_format_dm42();
 
 // Start help
 void start_help();
+
+// Filesystem function wrapper
+void init_sf_buf();
+void deinit_sf_buf();
+
 
 #endif

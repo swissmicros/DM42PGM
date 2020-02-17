@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2019  Thomas Okken
+ * Copyright (C) 2004-2020  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -28,36 +28,33 @@
 /* core_init()
  *
  * This function initializes the emulator core. If the read_state parameter is
- * 1, the core should read saved state using shell_read_saved_state(); if
- * it is 0, or if there is a problem reading the saved state, it should perform
- * a hard reset.
+ * 1, the core should read saved state from the file named by the
+ * state_file_name parameter, reading from the offset indicated by the offset
+ * parameter; if read_state is 0, or if there is a problem reading the saved
+ * state, it should perform a hard reset.
  * If the read_state parameter is 1, the 'version' parameter should contain the
  * state file version number; otherwise its value is not used.
  * This is guaranteed to be the first function called on the emulator core.
  */
-void core_init(int read_state, int4 version);
+void core_init(int read_state, int4 version, const char *state_file_name, int offset);
 
-#if defined(IPHONE) || defined(ANDROID) || defined(ARM)
-
-/* core_enter_background()
+/* core_save_state()
  *
- * This function is called when the iPhone app has been placed in background
- * mode. It writes the state, just like core_quit(), but it doesn't perform
- * any cleanup, so the app can resume instantly if it is brought back to
- * the foreground. If the app is killed while in the background, nothing is
- * lost.
+ * This function is called by the mobile apps when they are placed in
+ * background mode, and by the desktop apps when they are shutting down.
+ * It writes all the simulator's persistent state to a file given by the
+ * state_file_name parameter, creating it if it doesn't already exist.
  */
-void core_enter_background();
+void core_save_state(const char *state_file_name);
 
-#endif
-
-/* core_quit()
+/* core_cleanup()
  *
- * This function shuts down the emulator core. The core should save its state
- * using shell_write_saved_state().
- * This is guaranteed to be the last function called on the emulator core.
+ * This function deletes down the emulator core state from memory. It may be
+ * called during app shutdown, although that's not really necessary unless you
+ * are checking for memory leaks. It should be called between saving state and
+ * loading a new state, that is, when switching states.
  */
-void core_quit();
+void core_cleanup();
 
 /* core_repaint_display()
  *
@@ -82,10 +79,9 @@ int core_menu();
  * The shell uses this function to check if the core is in "alpha" mode (i.e.
  * the ALPHA menu or any of its submenus is active). This affects how events
  * from the keyboard (the real PC keyboard, not the on-screen one emulated by
- * Free42) or PalmOS Graffiti device are handled: in alpha mode, printable
- * ASCII characters are sent straight to the core; outside alpha mode, all
- * key events are translated sequences of HP-42S key events according to the
- * keymap file.
+ * Free42) are handled: in alpha mode, printable ASCII characters are sent
+ * straight to the core; outside alpha mode, all key events are translated
+ * sequences of HP-42S key events according to the keymap file.
  */
 int core_alpha_menu();
 
@@ -211,9 +207,7 @@ int core_keyup();
 /* core_powercycle()
  *
  * This tells the core to pretend that a power cycle has just taken place.
- * Usually called right after core_init(), but on platforms where a power-down
- * can take place without shutting down applications, it can be called at any
- * time between core_init() and core_quit().
+ * Usually called right after core_init().
  * The core should respond by performing power-down activities, immediately
  * followed by power-up activities. (The emulator core is never expected to
  * actually emulate the state of *being* off -- the host environment can handle
@@ -270,17 +264,21 @@ int4 core_program_size(int prgm_index);
  * set of programs (from the list returned by core_list_programs()) and
  * confirmed the operation (supplied a file name etc.). 
  * The 'count' parameter indicates how many programs are to be exported; the
- * 'indexes' parameter is an array of program indexes. The core will pass the
- * raw file data to the shell using the shell_write() function.
+ * 'indexes' parameter is an array of program indexes.
+ * When called by the core during state file saving, raw_file_name will be
+ * NULL, which tells it to write to the already-opened state file.
  */
-void core_export_programs(int count, const int *indexes);
+void core_export_programs(int count, const int *indexes, const char *raw_file_name);
 
 /* core_import_programs()
  *
- * This function is called by the shell after the user has selected a file to
- * import. The core will read the file data using the shell_read() function.
+ * This function imports programs from the file named by the raw_file_name
+ * parameter. It will read at most num_progs programs. When called by the
+ * shell, num_progs should be 0, which tells it to load the entire file.
+ * When called by the core during state file loading, raw_file_name will be
+ * NULL, which tells it to read from the already-opened state file.
  */
-void core_import_programs();
+void core_import_programs(int num_progs, const char *raw_file_name);
 
 /* core_copy()
  *
@@ -336,6 +334,7 @@ extern int repeating_key;
 void set_alpha_entry(bool state);
 void set_running(bool state);
 bool program_running();
+bool alpha_active();
 
 int want_to_run_again();
 void do_interactive(int command);

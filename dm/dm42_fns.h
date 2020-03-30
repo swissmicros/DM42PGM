@@ -89,7 +89,8 @@ extern FRESULT pgm_res;
 
 // State files dir
 #define STATE_DIR      "/STATE"
-#define STATE_EXT      ".s42"
+#define STATE_EXT_MASK ".?42"
+#define STATE_EXT      ".f42"
 
 
 // Print to file dir
@@ -157,6 +158,8 @@ char * get_stack_layout_str(char *s, int layout);
 
 void copy_reset_state_filename(char *s, int maxlen);
 
+// res >= 0 -> OK
+int savestat_check_read(const char * state_file_name);
 
 #define LCD_HEADER_LINES 24
 #define LCD_ANN_LINES    16

@@ -342,6 +342,24 @@ int load_statefile(const char * fpath, const char * fname, void * data) {
   lcd_puts(t24, "Calculator state file:");
   lcd_puts(t24, fname);
 
+  int res = savestat_check_read(fpath);
+  if (res < 0) {
+    // Bad file or read/write problem
+
+    lcd_puts(t24, "");
+    lcd_puts(t24, "ERROR: Cannot read the file");
+    lcd_puts(t24, "Not a state file or filesystem error.");
+    lcd_puts(t24, "");
+    lcd_puts(t24, "");
+    lcd_puts(t24, "Press any key to continue");
+    lcd_refresh();
+
+    wait_for_key_press();
+
+    return 0;
+  }
+
+
   // 'Sure' dialog
   lcd_puts(t24, "");
   lcd_puts(t24, "WARNING: Current calculator state");
@@ -380,13 +398,38 @@ int load_statefile(const char * fpath, const char * fname, void * data) {
 }
 
 
+
+#define RESET_STATE_FILE_SIZE        0x38
+
+
 int save_statefile(const char * fpath, const char * fname, void * data) {
 
   lcd_puts(t24,"Saving state ...");
-  lcd_puts(t24, fname);  lcd_refresh();
+
+  char ff[RESET_STATE_FILE_SIZE];
+  const char *fp = fpath;
+
+  // Display correct short name
+  strcpy(ff, fname);
+  ff[strlen(fname)-3] = 'f';
+  lcd_puts(t24, ff);  lcd_refresh();
+
+  int flen = strlen(fpath);
+  if (flen < RESET_STATE_FILE_SIZE && fpath[flen-3] != 'f') {
+    // Fix filename: .s42 -> .f42
+    strcpy(ff, fpath);
+    ff[flen-3] = 'f';
+
+    if (file_exists(fpath)) {
+      sys_disk_write_enable(1);
+      f_rename(fpath, ff);
+      sys_disk_write_enable(0);
+    }
+    fp = ff;
+  }
 
   // Store the state file name
-  set_reset_state_file(fpath);
+  set_reset_state_file(fp);
 
   // Exit with appropriate code to force statefile save
   return MRET_SAVESTATE;
@@ -782,13 +825,13 @@ int run_menu_item(uint8_t line_id) {
     pgm_export();
     break;
   case MI_LOAD_STATE:
-    ret = file_selection_screen("Load Calculator State", STATE_DIR, STATE_EXT, load_statefile, 0, 0, NULL);
+    ret = file_selection_screen("Load Calculator State", STATE_DIR, STATE_EXT_MASK, load_statefile, 0, 0, NULL);
     if (ret == MRET_EXIT) ret = 0;
     break;
   case MI_SAVE_STATE:
     // Don't pass through if the power is insufficient  
     if ( power_check_screen() ) break;
-    ret = file_selection_screen("Save Calculator State", STATE_DIR, STATE_EXT, save_statefile, 1, 1, NULL);
+    ret = file_selection_screen("Save Calculator State", STATE_DIR, STATE_EXT_MASK, save_statefile, 1, 1, NULL);
     if (ret == MRET_EXIT) ret = 0;
     break;
 

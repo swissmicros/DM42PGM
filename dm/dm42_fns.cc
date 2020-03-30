@@ -2474,25 +2474,78 @@ set_ptf_err:
  ▀▄▄▄█▀ ▀▄▄▀█    █    ▀█▄▄▀  ▀▄▄▄▀    ▀▄▄  ▀▄▄▀█    ▀▄▄           █    █   █  ▀▄▄▄▀ 
 
 */
- 
 
+FRESULT statefile_save_DM42part();
+
+
+// FREE42_MAGIC 466B3432
 // 0 - OK
-int savestat_init_read() {
-  uint ver[2];
+int savestat_init_read(const char * state_file_name, int allow_extend) {
+  const int verlen = sizeof(savestat_data_t)/sizeof(uint) + 2;
+  const int versize = verlen*sizeof(uint);
+  uint ver[verlen];
   uint rd;
-  char * state_file_name = get_reset_state_file();
+  int free42_ver = -1;
+
   pgm_res = FR_DISK_ERR;
   if ( !sys_disk_ok() || state_file_name == NULL ) return -1;
   pgm_res = f_open(ppgm_fp,  state_file_name , FA_READ);
   if ( pgm_res != FR_OK ) return -1;
-  pgm_res = f_lseek(ppgm_fp, f_size(ppgm_fp)-sizeof(savestat_data_t)-sizeof(uint) );
+  pgm_res = f_lseek(ppgm_fp, f_size(ppgm_fp)-versize);
   if ( pgm_res != FR_OK ) return -1;
-  pgm_res = f_read(ppgm_fp,ver,sizeof(ver),&rd);
-  if ( pgm_res != FR_OK || rd != sizeof(ver) || ver[1] != SAVESTAT_MAGIC) return -1;
+  pgm_res = f_read(ppgm_fp, ver, versize, &rd);
+  if ( pgm_res != FR_OK || rd != versize) return -1;
   pgm_res = f_lseek(ppgm_fp, 0);
   if ( pgm_res != FR_OK ) return -1;
-  return ver[0];
+
+  // Buffer correctly read and file positioned at the beginning
+
+  // Correct state file with DM42 part, just return Free42 version
+  if (ver[0] == FREE42_MAGIC && ver[2] == SAVESTAT_MAGIC) return ver[1];
+  
+  if (!allow_extend) return -1;
+
+  // Foreign state file -> add DM42 part
+  if (ver[verlen-2] == FREE42_MAGIC) {
+    free42_ver = ver[verlen-1];
+
+    pgm_res = f_close(ppgm_fp);
+    if ( pgm_res != FR_OK ) return -1;
+
+    sys_disk_write_enable(1);
+
+    pgm_res = f_open(ppgm_fp, state_file_name, FA_WRITE);
+    if ( pgm_res != FR_OK ) return -1;
+
+    pgm_res = f_lseek(ppgm_fp, f_size(ppgm_fp));
+    if ( pgm_res != FR_OK ) return -1;
+
+    // Write DM42 part (return value in pgm_res)
+    statefile_save_DM42part();
+
+    FRESULT cls_res = f_close(ppgm_fp);
+
+    if ( sys_is_disk_write_enable() )
+      sys_disk_write_enable(0);
+
+    if ( pgm_res != FR_OK || cls_res != FR_OK) return -1;
+
+    // No need to reopen the file as allow_extend is only set in check_read
+    //pgm_res = f_open(ppgm_fp,  state_file_name , FA_READ);
+    //if ( pgm_res != FR_OK ) return -1;
+  }
+
+  return free42_ver;
 }
+
+
+// res >= 0 -> OK
+int savestat_check_read(const char * state_file_name) {
+  int res = savestat_init_read(state_file_name, 1);
+  f_close(ppgm_fp);
+  return res;
+}
+
 
 // 0 - OK
 int savestat_init_write() {
@@ -2506,6 +2559,8 @@ int savestat_init_write() {
   pgm_res = f_open(ppgm_fp, state_file_name, FA_WRITE|FA_CREATE_ALWAYS);
   return pgm_res != FR_OK;
 }
+
+
 
 
 void copy_reset_state_filename(char *s, int maxlen) {
@@ -2540,6 +2595,80 @@ void copy_reset_state_filename(char *s, int maxlen) {
 }
 
 
+/**
+  @brief Save DM42 part of state file
+  @return Return value of file write
+
+  Expects the file opened for writing and positioned in right place.
+*/
+FRESULT statefile_save_DM42part() {
+
+  // =============================
+  // == DM42 part of state file ==
+  // =============================
+  savestat_data_t dat;
+  uint wr;
+  memset(&dat,0,sizeof(dat));
+  dat.magic = SAVESTAT_MAGIC;
+
+  // == Statefile save flags
+  dat.flags = 0;
+  //dat.flags |= ST(STAT_BEEP_MUTE) ? SAVESTAT_FLAG_BEEP_MUTE : 0; // Using calc flag now
+  dat.flags |= ST(STAT_SLOW_AUTOREP) ? SAVESTAT_FLAG_SLOW_AUTOREP : 0;
+  dat.flags |= PS(PERM_MAIN_MENU) ? SAVESTAT_PERM_MAIN_MENU : 0;
+
+  dat.flags |= PS(PRTOF_TEXT)      ? SAVESTAT_PRTOF_TXT    : 0;
+  dat.flags |= PS(PRTOF_GRAPHICS)  ? SAVESTAT_PRTOF_GR     : 0;
+  dat.flags |= PS(PRTOF_NOIR)      ? SAVESTAT_PRTOF_NOIR   : 0;
+  dat.flags |= PS(PRTOF_GR_IN_TXT) ? SAVESTAT_PRTOF_GR_IN_TXT : 0;
+  dat.flags |= PS(PRINT_DBLNL)     ? SAVESTAT_PRINT_DBLNL  : 0;
+
+  // Top-bar header - DOW/DATE/TIME inverted as they are by default displayed
+  dat.flags |=  PS(DISP_STATFN)   ? SAVESTAT_DISP_STATFN   : 0;
+  dat.flags |= !PS(DISP_DOW)      ? SAVESTAT_DISP_DOW      : 0;
+  dat.flags |= !PS(DISP_DATE)     ? SAVESTAT_DISP_DATE     : 0;
+  dat.flags |=  PS(DISP_DATE_SEP0)? SAVESTAT_DISP_DATE_SEP0: 0;
+  dat.flags |=  PS(DISP_DATE_SEP1)? SAVESTAT_DISP_DATE_SEP1: 0;
+  dat.flags |=  PS(DISP_SHORTMON) ? SAVESTAT_DISP_SHORTMON : 0;
+  dat.flags |= !PS(DISP_TIME)     ? SAVESTAT_DISP_TIME     : 0;
+  dat.flags |=  PS(DISP_VOLTAGE)  ? SAVESTAT_FLAG_DISP_VOLTAGE : 0;
+  // --
+
+  int gm = graphics_mode();
+  dat.flags |= (gm & 1) ? SAVESTAT_FLAG_GMODE0 : 0;
+  dat.flags |= (gm & 2) ? SAVESTAT_FLAG_GMODE1 : 0;
+  
+  dat.flags |= is_REG_ALIGN_LEFT ? SAVESTAT_FLAG_REG_LEFT  : 0;
+  dat.flags |= is_REG_LINES      ? SAVESTAT_FLAG_REG_LINES : 0;
+  
+  int reflcd = ~get_reflcd_mask() & 7;
+  dat.flags |= (reflcd & 1) ? SAVESTAT_FLAG_REFLCD0 : 0;
+  dat.flags |= (reflcd & 2) ? SAVESTAT_FLAG_REFLCD1 : 0;
+  dat.flags |= (reflcd & 4) ? SAVESTAT_FLAG_REFLCD2 : 0;
+  // ==
+
+  dat.reg_font_ix = reg_font_ix;
+  dat.pgm_font_ix = pgm_font_ix;
+
+  dat.font_offsets[0] = (reg_font_offset>> 0) & 0xff;
+  dat.font_offsets[1] = (reg_font_offset>> 8) & 0xff;
+  dat.font_offsets[2] = (reg_font_offset>>16) & 0xff;
+
+  strcpy(dat.platf_ver,PLATFORM_VERSION);
+  dat.century = rtc_read_century();
+  
+  dat.printer_delay = core_printer_delay()/10;
+  if ( dat.printer_delay == 0 ) dat.printer_delay = 1;
+
+  dat.stack_layout = stack_layout;
+  
+  pgm_res = f_write(ppgm_fp, &dat, sizeof(savestat_data_t), &wr);
+
+  return pgm_res;
+}
+
+
+
 // Returns 0 on success
 int statefile_save() {
   int ret = -1;
@@ -2560,67 +2689,9 @@ int statefile_save() {
     core_save_state("x");
     deinit_sf_buf();
 
-    // =============================
-    // == DM42 part of state file ==
-    // =============================
-    savestat_data_t dat;
-    uint wr;
-    memset(&dat,0,sizeof(dat));
-    dat.magic = SAVESTAT_MAGIC;
-
-    // == Statefile save flags
-    dat.flags = 0;
-    //dat.flags |= ST(STAT_BEEP_MUTE) ? SAVESTAT_FLAG_BEEP_MUTE : 0; // Using calc flag now
-    dat.flags |= ST(STAT_SLOW_AUTOREP) ? SAVESTAT_FLAG_SLOW_AUTOREP : 0;
-    dat.flags |= PS(PERM_MAIN_MENU) ? SAVESTAT_PERM_MAIN_MENU : 0;
-
-    dat.flags |= PS(PRTOF_TEXT)      ? SAVESTAT_PRTOF_TXT    : 0;
-    dat.flags |= PS(PRTOF_GRAPHICS)  ? SAVESTAT_PRTOF_GR     : 0;
-    dat.flags |= PS(PRTOF_NOIR)      ? SAVESTAT_PRTOF_NOIR   : 0;
-    dat.flags |= PS(PRTOF_GR_IN_TXT) ? SAVESTAT_PRTOF_GR_IN_TXT : 0;
-    dat.flags |= PS(PRINT_DBLNL)     ? SAVESTAT_PRINT_DBLNL  : 0;
-
-    // Top-bar header - DOW/DATE/TIME inverted as they are by default displayed
-    dat.flags |=  PS(DISP_STATFN)   ? SAVESTAT_DISP_STATFN   : 0;
-    dat.flags |= !PS(DISP_DOW)      ? SAVESTAT_DISP_DOW      : 0;
-    dat.flags |= !PS(DISP_DATE)     ? SAVESTAT_DISP_DATE     : 0;
-    dat.flags |=  PS(DISP_DATE_SEP0)? SAVESTAT_DISP_DATE_SEP0: 0;
-    dat.flags |=  PS(DISP_DATE_SEP1)? SAVESTAT_DISP_DATE_SEP1: 0;
-    dat.flags |=  PS(DISP_SHORTMON) ? SAVESTAT_DISP_SHORTMON : 0;
-    dat.flags |= !PS(DISP_TIME)     ? SAVESTAT_DISP_TIME     : 0;
-    dat.flags |=  PS(DISP_VOLTAGE)  ? SAVESTAT_FLAG_DISP_VOLTAGE : 0;
-    // --
-
-    int gm = graphics_mode();
-    dat.flags |= (gm & 1) ? SAVESTAT_FLAG_GMODE0 : 0;
-    dat.flags |= (gm & 2) ? SAVESTAT_FLAG_GMODE1 : 0;
-    
-    dat.flags |= is_REG_ALIGN_LEFT ? SAVESTAT_FLAG_REG_LEFT  : 0;
-    dat.flags |= is_REG_LINES      ? SAVESTAT_FLAG_REG_LINES : 0;
-    
-    int reflcd = ~get_reflcd_mask() & 7;
-    dat.flags |= (reflcd & 1) ? SAVESTAT_FLAG_REFLCD0 : 0;
-    dat.flags |= (reflcd & 2) ? SAVESTAT_FLAG_REFLCD1 : 0;
-    dat.flags |= (reflcd & 4) ? SAVESTAT_FLAG_REFLCD2 : 0;
-    // ==
-
-    dat.reg_font_ix = reg_font_ix;
-    dat.pgm_font_ix = pgm_font_ix;
-
-    dat.font_offsets[0] = (reg_font_offset>> 0) & 0xff;
-    dat.font_offsets[1] = (reg_font_offset>> 8) & 0xff;
-    dat.font_offsets[2] = (reg_font_offset>>16) & 0xff;
-
-    strcpy(dat.platf_ver,PLATFORM_VERSION);
-    dat.century = rtc_read_century();
-    
-    dat.printer_delay = core_printer_delay()/10;
-    if ( dat.printer_delay == 0 ) dat.printer_delay = 1;
-
-    dat.stack_layout = stack_layout;
-    
+    // Write DM42 part (return value in pgm_res)
     if (pgm_res == FR_OK)
-      pgm_res = f_write(ppgm_fp, &dat, sizeof(savestat_data_t), &wr);
+      statefile_save_DM42part();
 
     FRESULT cls_res = f_close(ppgm_fp);
 
@@ -3379,7 +3450,7 @@ void program_main() {
       //savestat_init(SAVEST_NEWEST); // Get one last saved
       if ( read_statefile ) {
         mark_region(MARK_42_STAT_LOAD);
-        ver = savestat_init_read();
+        ver = savestat_init_read(get_reset_state_file(), 0);
         if ( ver < 0 ) // No state file -> just restart
           read_statefile = 0;
         else

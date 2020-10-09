@@ -141,6 +141,7 @@ FRESULT f_read (FIL* fp, void* buff, UINT btr, UINT* br);			/* Read data from th
 FRESULT f_write (FIL* fp, const void* buff, UINT btw, UINT* bw);	/* Write data to the file */
 FRESULT f_lseek (FIL* fp, FSIZE_t ofs);								/* Move file pointer of the file object */
 FRESULT f_rename (const TCHAR* path_old, const TCHAR* path_new);	/* Rename/Move a file or directory */
+FRESULT f_unlink (const TCHAR* path);								/* Delete an existing file or directory */
 
 #define f_size(fp) ((fp)->obj.objsize)
 #define f_tell(fp) ((fp)->fptr)

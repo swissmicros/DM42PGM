@@ -76,7 +76,7 @@ prog_info_t const prog_info = {
 
 
 
-int _read (int file, char *ptr, int len)
+int _read(int file, char *ptr, int len)
 {
 	return len;
 }
@@ -85,7 +85,11 @@ int _read (int file, char *ptr, int len)
 int _write(int file, char *ptr, int len)
 {
 	// Routed to OS, where it is printed to ITM
+#ifdef USER_WRITE
+	return USER_WRITE(file, ptr, len);
+#else
 	return __sysfn__write(file, ptr, len);
+#endif
 }
 
 

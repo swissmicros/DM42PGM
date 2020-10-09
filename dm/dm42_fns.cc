@@ -1452,6 +1452,12 @@ void shell_get_time_date(uint4 *tim, uint4 *date, int *weekday) {
 }
 
 
+void lcd_repaint_now() {
+  if ( ( (lcd_changed & LCD_CHG_REGS) ) || (LCD_CHG_FORCE & lcd_changed) )
+    disp_regs(LCD_UPD_DFLT);
+  lcd_refresh();
+  lcd_changed = 0;
+}
 
 
 void shell_blitter(const char *bits, int bytesperline, int x, int y, int width, int height) {
@@ -2826,6 +2832,10 @@ void disp_regs(int what) {
 
   int is_running = ANN(RUN);
   int refresh_mask = is_running ? what : LCD_UPD_ALL;
+
+  // Allow repaint during PSE
+  if (is_mode_pause())
+    refresh_mask = LCD_UPD_ALL;
 
   if (refresh_mask < 0)
     refresh_mask = get_reflcd_mask();

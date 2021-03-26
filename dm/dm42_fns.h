@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2020, SwissMicros
+Copyright (c) 2015-2021, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -155,6 +155,11 @@ extern const char alpha_upper_transl[];
 void set_stack_layout(int layout);
 int get_stack_layout();
 char * get_stack_layout_str(char *s, int layout);
+
+
+int get_dynstackext();
+void set_dynstackext(int val);
+
 
 void copy_reset_state_filename(char *s, int maxlen);
 

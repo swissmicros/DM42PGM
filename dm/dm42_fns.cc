@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2020, SwissMicros
+Copyright (c) 2015-2021, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -433,6 +433,7 @@ void skin_repaint_annunciator(int which, bool state);
 extern uint8_t is_graphics;
 // ----------------------
 
+int dm42_get_dmy();
 
 
 //uint8_t draw_old_lcd = 0;
@@ -1159,6 +1160,51 @@ int statefile_putc(int ic, FILE *stream) {
   return wr ? c : EOF;
 }
 
+
+
+#define STATCONFIG_MAGIC 0xbb40e64d
+#define STATCONFIG_DYNSTK 1
+
+
+uint32_t* stat_config_ptr() {
+  // Pointer to reserved area
+  uint32_t* p = (uint32_t*)(0x10007f90);
+  if (p[0] != STATCONFIG_MAGIC) {
+    p[0] = STATCONFIG_MAGIC;
+    p[1] = 0; // Defaults
+  }
+  return p+1;
+}
+
+
+uint32_t get_stat_config() {
+  uint32_t *p = stat_config_ptr();
+  return *p;
+}
+
+
+void set_stat_config(uint32_t val) {
+  uint32_t *p = stat_config_ptr();
+  *p = val;
+}
+
+
+int get_stat_config_bit(uint32_t mask) {
+  return (get_stat_config() & mask) != 0;
+}
+
+
+void set_stat_config_bit(uint32_t mask, int val) {
+  uint32_t st = get_stat_config();
+  if (val)
+    st |= mask;
+  else
+    st &= ~mask;
+  set_stat_config(st);
+}
+
+
+
 } // "C"
 
 // ------------
@@ -1412,9 +1458,42 @@ int64_t shell_random_seed() {
 #endif
 
 
+/* shell_decimal_point()
+ *
+ * Returns 0 if the host's locale uses comma as the decimal separator;
+ * returns 1 if it uses dot or anything else.
+ * Used to initialize flag 28 on hard reset.
+ */
 int shell_decimal_point() {
   return decimal_point ? 1 : 0;
 }
+
+
+/* shell_date_format()
+ *
+ * Returns 0 if the host's locale uses MDY date format;
+ * returns 1 if it uses DMY;
+ * returns 2 if it uses YMD.
+ * If the host's date format doesn't match any of these three component
+ * orders, returns 0.
+ * Used to initialize flags 31 and 67 on hard reset.
+ */
+int shell_date_format() {
+  return dm42_get_dmy(); // TODO: Fill correct value
+}
+
+
+/* shell_clk24()
+ *
+ * Returns 0 if the host's locale uses a 12-hour clock
+ * returns 1 if it uses a 24-hour clock
+ * Used to initialize CLK12/CLK24 mode on hard reset.
+ */
+bool shell_clk24() {
+  return is_clk24(); // TODO: Fill correct value
+}
+
+
 
 
 void shell_beeper(int frequency, int duration) {
@@ -1634,6 +1713,8 @@ void shell_force_lcd_refresh(int what) {
 
 
 
+
+
 /*
 ▄▄▄▄▄▄▄ █             ▀▀█    ▀▀█             ▄▄   ▄▄▄▄▄  ▄▄▄▄▄ 
    █    █ ▄▄    ▄▄▄     █      █             ██   █   ▀█   █   
@@ -1747,7 +1828,8 @@ void thell_edit_number(const char * prompt, int prompt_len, const char * line, i
   hp2font(edit_line, line, line_len);
 
   is_edit = 1;
-  is_edit_x = prompt[0] == 'x' && prompt[1] == 0x80;
+  char pchar = is_dynstack() ? '1' : 'x';
+  is_edit_x = prompt[0] == pchar && prompt[1] == 0x80;
 }
 
 
@@ -1940,6 +2022,25 @@ int is_disp_main_menu() {
   return PS(PERM_MAIN_MENU);
 }
 
+
+void sync_dynstackext(int val) {
+  if (val != core_settings.allow_big_stack) {
+    core_settings.allow_big_stack = val;
+    core_update_allow_big_stack();
+  }
+}
+
+int get_dynstackext() {
+  int val = get_stat_config_bit(STATCONFIG_DYNSTK);
+  sync_dynstackext(val);
+  return core_settings.allow_big_stack;
+}
+
+
+void set_dynstackext(int val) {
+  set_stat_config_bit(STATCONFIG_DYNSTK, val);
+  sync_dynstackext(val);
+}
 
 
 
@@ -2751,15 +2852,25 @@ int current_font_nr() {
   return is_pgm_mode() ? pgm_font_ix : reg_font_ix;
 }
 
+// Move fReg to prev ln - return 0 if line start is above LCD
+int reg_prev_ln() {
+  lcd_prevLn(fReg);
+  return fReg->y >= 0;
+}
+
+
 void disp_aligned_line(const char *prompt, const char *s) {
   char pr[EDIT_PROMPT_LEN+1];
 
   //lcd_putsAt(fReg,ln,""); // Fill the line
-  lcd_prevLn(fReg);
+  
+  //lcd_prevLn(fReg); // Moved to reg_prev_ln()
+  
   lcd_puts(fReg,""); // Fill the line
   fReg->lnfill = 0;
   if (is_REG_LINES) {
     int yln = fReg->y+lcd_baseHeight(fReg)+2;
+    //if (current_font_nr() < 0) yln += 1;
     if ( yln > fReg->y_top_grd)
       lcd_fillLines(yln, 0xAA, 1);
   }
@@ -2798,17 +2909,23 @@ void set_reg_font(int offset) {
   for(;offset < 0; offset++) fnr = lcd_prevFontNr(fnr);
 
   lcd_switchFont(fReg, fnr);
-  if (fnr < 0 && !is_pgm_mode() && NR2T(fnr) < 5)
-    fReg->ya++;
+  if (fnr < 0 && !is_pgm_mode() && NR2T(fnr) < 5) {
+    //fReg->ya++;
+    fReg->ya += 2;
+    fReg->yb -= 1;
+  }
   if (fnr >= 0 && is_pgm_mode() )
     fReg->yb = -1;
   if (fnr == 5) { fReg->yb-=1; fReg->ya-=1; }
 }
 
 
-void disp_reg(const char *prompt, reg_id_t reg_id, int line_reg_nr) {
+void disp_reg(const char *prompt, reg_id_t reg_id, int line_reg_nr, int bottom_up) {
 
   set_reg_font(get_reg_font_offset(line_reg_nr));
+
+  // Shortcut the display if the register line is outside the LCD
+  if (bottom_up && !reg_prev_ln()) return;
 
   const int linelen = (LCD_X + fReg->xoffs)/lcd_fontWidth(fReg); //(LCD_X - fReg->xoffs)/fReg->f->width;
   const int buflen = linelen; //64; //32;
@@ -2853,6 +2970,7 @@ void disp_regs(int what) {
 
   const int top_y_lines = LCD_HEADER_LINES + LCD_ANN_LINES;
   const int display_core_menu = (core_menu() && disp_was_menu_drawn);
+  int dynstack_top_lines = 0;
 
   set_reg_font(0);
 
@@ -2956,51 +3074,70 @@ void disp_regs(int what) {
 #endif
 
       if ( stack_layout & STACK_REG_L0)
-        disp_reg("L:",REG_LX, LINE_REG_L);
+        disp_reg("L:",AUX_REG_LX, LINE_REG_L, 1);
 
       // X is always displayed as edit or reg
       if (is_edit_x) { // (is_edit) - INPUT edit in text area already
         // Print edit line if available
         set_reg_font(get_reg_font_offset(LINE_REG_X));
-  
-        int plen = strlen(edit_prompt), llen = strlen(edit_line);
-        int const linelen = (LCD_X + fReg->xoffs)/lcd_fontWidth(fReg); //(LCD_X - fReg->xoffs)/fReg->f->width;
+        // Shortcut the display if the register line is outside the LCD
+        if (reg_prev_ln()) {
+          int plen = strlen(edit_prompt), llen = strlen(edit_line);
+          int const linelen = (LCD_X + fReg->xoffs)/lcd_fontWidth(fReg); //(LCD_X - fReg->xoffs)/fReg->f->width;
 
-        char s[linelen+2];
-        if ( plen+llen < linelen )
-          sprintf(s, "%s_", edit_line);
-        else {
-          sprintf(s, "\x9a%s_", edit_line+llen-(linelen-plen-2));
+          char s[linelen+2];
+          if ( plen+llen < linelen )
+            sprintf(s, "%s_", edit_line);
+          else {
+            sprintf(s, "\x9a%s_", edit_line+llen-(linelen-plen-2));
+          }
+          disp_aligned_line(edit_prompt, s);
         }
-        disp_aligned_line(edit_prompt, s);
       }
 
       if (!is_edit_x)
-        disp_reg("X:",REG_X, LINE_REG_X);
+        disp_reg(is_dynstack() ? "1:" : "X:",AUX_REG_X, LINE_REG_X, 1);
 
 
       // Display other registers according to the configuration
+      if (is_dynstack()) {
+        char lbl[3];
+        int stklines = get_dynstack_size();
+        if (stklines > 9) stklines = 9;
+        strcpy(lbl,"2:");
+        for(int ix=1; ix < stklines; ix++) {
+          disp_reg(lbl, -ix, LINE_REG_Y, 1);
+          lbl[0]++;
+          if (fReg->y < top_y_lines) break;
+        }
+      
+        dynstack_top_lines = 1;
+      
+      } else {
+        if ( stack_layout & STACK_REG_Y)
+          disp_reg("Y:",AUX_REG_Y, LINE_REG_Y, 1);
+        
+        if ( stack_layout & STACK_REG_Z)
+          disp_reg("Z:",AUX_REG_Z, LINE_REG_Z, 1);
+        
+        if ( stack_layout & STACK_REG_T)
+          disp_reg("T:",AUX_REG_T, LINE_REG_T, 1);
 
-      if ( stack_layout & STACK_REG_Y)
-        disp_reg("Y:",REG_Y, LINE_REG_Y);
-      
-      if ( stack_layout & STACK_REG_Z)
-        disp_reg("Z:",REG_Z, LINE_REG_Z);
-      
-      if ( stack_layout & STACK_REG_T)
-        disp_reg("T:",REG_T, LINE_REG_T);
-      
-      if ( stack_layout & STACK_REG_L)
-        disp_reg("L:",REG_LX, LINE_REG_L);
+        if ( stack_layout & STACK_REG_L)
+          disp_reg("L:",AUX_REG_LX, LINE_REG_L, 1);
 
-      if ( stack_layout & STACK_REG_A)
-        disp_reg("A:",REG_A, LINE_REG_A);
+        if ( stack_layout & STACK_REG_A)
+          disp_reg("A:",AUX_REG_A, LINE_REG_A, 1);
+      }
     }
-
   }
 
   // Reset font size
   set_reg_font(0);
+
+  // Set default for top registers (can be changed by text lines)
+  fReg->ln_offs = top_y_lines; // From the top
+  lcd_setLine(fReg,0);
 
   // == Draw the top text lines ==
   if ( !is_pgm_mode() && (!is_goose() || (is_goose() && (refresh_mask & LCD_UPD_GOOSE))) ) {
@@ -3027,10 +3164,36 @@ void disp_regs(int what) {
     }
 
     // Draw black line under text area if at least one line was printed
-    if ( wasy )
+    if ( wasy ) {
       lcd_fillLines(wasy+lcd_lineHeight(fReg), LCD_SET_VALUE, 2);
+      fReg->ln_offs += 4;
+    }
+
+    lcd_setLine(fReg,last_line); // For top lines in next section
   }
 
+  // Now the fReg->y should be set to the top of register area
+
+  // L and A registers on top in DynStack mode
+  if ( dynstack_top_lines ) {
+    int wasy = 0; // Anything was drawn
+
+    if ( stack_layout & STACK_REG_L) {
+      disp_reg("L:",AUX_REG_LX, LINE_REG_L, 0);
+      wasy = fReg->y;
+    }
+
+    if ( stack_layout & STACK_REG_A) {
+      disp_reg("A:",AUX_REG_A, LINE_REG_A, 0);
+      wasy = fReg->y;
+    }
+
+    if ( wasy )
+      lcd_fillLines(wasy+lcd_lineHeight(fReg)-2, LCD_SET_VALUE, 1);
+  }
+
+  // Reset font size
+  set_reg_font(0);
 
   // == Draw flag icons ==
   if (refresh_mask & LCD_UPD_ANN) {
@@ -3064,7 +3227,8 @@ void disp_regs(int what) {
 
 
 void empty_keydown() {
-  int dummy1, dummy2, keep_running;
+  bool dummy1, keep_running;
+  int  dummy2;
   do {
     printf("empty keydown:\n");
     keep_running = core_keydown(0, &dummy1, &dummy2);
@@ -3305,7 +3469,8 @@ void update_aplha_table() {
 
 
 void program_main() {
-  int enqueued, repeat, keep_running = 0;
+  bool enqueued, keep_running = 0;
+  int repeat;
   int resume_run = 0;
   int key = 0;
   int no_menu_key = 0;
@@ -3332,6 +3497,8 @@ void program_main() {
   read_statefile = !ST(STAT_CLEAN_RESET);
 
   SET_ST(STAT_CLK_WKUP_ENABLE); // Enable wakeup each minute (for clock update)
+
+  get_dynstackext(); // Sync the value with core
 
   for(;;)
   {

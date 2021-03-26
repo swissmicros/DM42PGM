@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2020, SwissMicros
+Copyright (c) 2015-2021, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -67,8 +67,13 @@ extern "C" {
 void after_fat_format_dm42() {
   if ( sys_disk_ok() ) {
     set_fat_label("DM42");
-    check_create_dir(PGM_DIR);   // Create /PROGRAMS directory
-    check_create_dir(STATE_DIR); // Create /STATE    directory
+    check_create_dir(PGM_DIR);    // Create /PROGRAMS directory
+    check_create_dir(STATE_DIR);  // Create /STATE    directory
+
+    check_create_dir(SCR_DIR);    // Create /SCREENS  directory       
+    check_create_dir(OFFIMG_DIR); // Create /OFFIMG   directory      
+    check_create_dir(HELP_DIR);   // Create /HELP     directory    
+    check_create_dir(PRINT_DIR);  // Create /PRINTS   directory      
   }
 }
 
@@ -160,7 +165,7 @@ int lcd_for_dm42(int what) {
       t20->y += h2;
       lcd_print(t20, "DM42 v" DM42_VERSION " (C) SwissMicros GmbH");
       t20->y += h2;
-      lcd_print(t20, "%s (C) 2004-2020, Thomas Okken", free42_version_str());
+      lcd_print(t20, "%s (C) 2004-2021, Thomas Okken", free42_version_str());
       t20->y += h2;
       lcd_puts(t20, "Intel Decimal FloatingPointMath Lib v2.0u1");
       lcd_puts(t20, "  (C) 2007-2018, Intel Corp.");
@@ -731,6 +736,7 @@ const uint8_t mid_settings[] = {
     MI_BEEP_MUTE,
     MI_SLOW_AUTOREP,
     MI_STACK_CONFIG,
+    MI_DYNSTACKEXT,
     0 }; // Terminator
 
 
@@ -883,6 +889,9 @@ int run_menu_item(uint8_t line_id) {
   case MI_STACK_CONFIG:
     handle_menu(&MID_STACK_CONFIG,MENU_ADD,stack_menu_index());
     break;
+  case MI_DYNSTACKEXT:
+    set_dynstackext(!get_dynstackext());
+    break;
   case MI_STACK_XYZTL:
     set_stack_layout(STACK_XYZTL);
     ret = MRET_EXIT;
@@ -1022,6 +1031,8 @@ const char * menu_line_str(uint8_t line_id, char * s, const int slen) {
 
   case MI_STACK_CONFIG:
     ln = layout_str(s, "Stack Layout");              break;
+
+  case MI_DYNSTACKEXT:  ln = opt_str(s, " Dynamic Stack Extension", get_dynstackext()); break;
 
   case MI_STACK_XYZTL:  ln = orb_str(s, "XYZTL", get_stack_layout() == STACK_XYZTL); break;
   case MI_STACK_XYZTA:  ln = orb_str(s, "XYZTA", get_stack_layout() == STACK_XYZTA); break;

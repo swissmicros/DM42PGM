@@ -8,14 +8,25 @@ extern "C" {
 
 #include <stdint.h>
 
+/*
 typedef enum {
-  REG_X = 1,
-  REG_Y,
-  REG_Z,
-  REG_T,
-  REG_LX,
-  REG_A
+  AUX_REG_X = 1,
+  AUX_REG_Y,
+  AUX_REG_Z,
+  AUX_REG_T,
+  AUX_REG_LX,
+  AUX_REG_A
 } reg_id_t;
+*/
+
+#define AUX_REG_X   1
+#define AUX_REG_Y   2
+#define AUX_REG_Z   3
+#define AUX_REG_T   4
+#define AUX_REG_LX  5
+#define AUX_REG_A   6
+
+typedef int reg_id_t;
 
 
 void set_graphics_mode(int gm);
@@ -91,8 +102,14 @@ const char * free42_version_str();
 int get_calc_flag(int flag_nr);
 void set_calc_flag(int flag_nr, int val);
 
+// DynStack
+int is_dynstack();
+int get_dynstack_size();
+
+
 // Core keydown hack to support separate menu key line
-int core_keydown_ex(int key, int *enqueued, int *repeat, int no_menu_key);
+//int core_keydown_ex(int key, int *enqueued, int *repeat, int no_menu_key);
+bool core_keydown_ex(int key, bool *enqueued, int *repeat, int no_menu_key);
 
 // Returns printer delay set by DELAY command
 unsigned int core_printer_delay();

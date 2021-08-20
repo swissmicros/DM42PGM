@@ -1790,12 +1790,37 @@ int get_pattern_pixels(const char * ptrn, int width, int mask, int dbl) {
 
 } // C
 
+#define DISP_BUF_SIZE 272
+char disp_back[DISP_BUF_SIZE];
+int8_t disp_back_restore = 0;
+int8_t is_mem_cmd = 0;
+
 
 void thell_draw_menu_key(int n, int highlight, const char *s, int length) {
   DBGTHELL("thell_draw_menu_key[%i:%c%s]\n", n, highlight?'#':' ', str_from_hp(s, length));
 
   // No repaints in main menu
   if ( ST(STAT_MENU) ) return;
+
+  if (n == -1) {
+    // Update menu, but preserve LCD contents
+    memcpy(disp_back, core_display_buffer(), DISP_BUF_SIZE);
+    disp_back_restore = 1;
+    return;
+  }
+
+  if (n == -2) {
+    if (disp_back_restore) {
+      disp_back_restore = 0;
+      memcpy(core_display_buffer(), disp_back, DISP_BUF_SIZE);
+    }
+    return;
+  }
+
+  if (n == -3) {
+    is_mem_cmd = 1;
+    return;
+  }
 
   disp_was_menu_drawn = 1; // Note the menu was actually drawn
 
@@ -1956,6 +1981,7 @@ void thell_start_show() {
 }
 
 void thell_clear_display() {
+  is_mem_cmd = 0;
   clear_tlcd_row(0);
   clear_tlcd_row(1);
 }
@@ -2917,6 +2943,9 @@ void set_reg_font(int offset) {
   if (fnr >= 0 && is_pgm_mode() )
     fReg->yb = -1;
   if (fnr == 5) { fReg->yb-=1; fReg->ya-=1; }
+  //if (fnr >= 0x13) { fReg->yb-=1; fReg->ya-=1; }
+  if (fnr >= 0x10 && fnr < 0x13 && is_pgm_mode() )
+    fReg->yb = 0;
 }
 
 
@@ -3140,7 +3169,9 @@ void disp_regs(int what) {
   lcd_setLine(fReg,0);
 
   // == Draw the top text lines ==
-  if ( !is_pgm_mode() && (!is_goose() || (is_goose() && (refresh_mask & LCD_UPD_GOOSE))) ) {
+  if ( ( !is_pgm_mode() && (!is_goose() || (is_goose() && (refresh_mask & LCD_UPD_GOOSE))) ) ||
+        is_mem_cmd )
+  {
     int wasy = 0; // Anything was drawn
     int last_line = 0;
     // Print from text buffer all what isn't especially handled
@@ -3499,6 +3530,13 @@ void program_main() {
   SET_ST(STAT_CLK_WKUP_ENABLE); // Enable wakeup each minute (for clock update)
 
   get_dynstackext(); // Sync the value with core
+
+  // --
+  pgm_font_ix = lcd_toggleFontT(pgm_font_ix);
+  reg_font_ix = lcd_toggleFontT(reg_font_ix);
+  pgm_font_ix = lcd_toggleFontT(pgm_font_ix);
+  reg_font_ix = lcd_toggleFontT(reg_font_ix);
+
 
   for(;;)
   {

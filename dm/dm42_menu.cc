@@ -155,14 +155,14 @@ int lcd_for_dm42(int what) {
 
     case DISP_ABOUT:
       // Just base of original system about
-      lcd_for_calc(DISP_ABOUT);
-      lcd_putsAt(t24,4,"");
+      t24->y = lcd_for_calc(DISP_ABOUT);
+      lcd_puts(t24,""); //4
       lcd_prevLn(t24);
       // --
       
       int h2 = lcd_lineHeight(t20)/2;
       lcd_setXY(t20, t24->x, t24->y);
-      t20->y += h2;
+      t20->y += h2-5;
       lcd_print(t20, "DM42 v" DM42_VERSION " (C) SwissMicros GmbH");
       t20->y += h2;
       lcd_print(t20, "%s (C) 2004-2021, Thomas Okken", free42_version_str());

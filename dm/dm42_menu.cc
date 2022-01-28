@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2021, SwissMicros
+Copyright (c) 2015-2022, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -165,7 +165,7 @@ int lcd_for_dm42(int what) {
       t20->y += h2-5;
       lcd_print(t20, "DM42 v" DM42_VERSION " (C) SwissMicros GmbH");
       t20->y += h2;
-      lcd_print(t20, "%s (C) 2004-2021, Thomas Okken", free42_version_str());
+      lcd_print(t20, "%s (C) 2004-2022, Thomas Okken", free42_version_str());
       t20->y += h2;
       lcd_puts(t20, "Intel Decimal FloatingPointMath Lib v2.0u1");
       lcd_puts(t20, "  (C) 2007-2018, Intel Corp.");

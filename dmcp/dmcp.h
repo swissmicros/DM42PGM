@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2021, SwissMicros
+Copyright (c) 2015-2022, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -356,7 +356,7 @@ typedef struct {
 
 // ----------------------------------
 
-#define PLATFORM_VERSION "3.22"
+#define PLATFORM_VERSION "3.23"
 
 // System interface version
 #define PLATFORM_IFC_CNR   3

@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2021  Thomas Okken
+ * Copyright (C) 2004-2022  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -94,6 +94,17 @@ bool core_alpha_menu();
  * translated to keycodes 1 through 6, regardless of the keyboard map.
  */
 bool core_hex_menu();
+
+/* core_special_menu_key()
+ *
+ * The shell can call this function if the physical cursor left, cursor right,
+ * or delete keys have been pressed; the core will return the appropriate
+ * menu key to trigger. This is to support menus like the matrix editor.
+ * Which can be: 1=left, 2=shift left, 3=right, 4=shift right, 5=del.
+ * The return value is a menu key number 1-6, or 0 if no special menu key
+ * is available.
+ */
+int core_special_menu_key(int which);
 
 /* core_keydown()
  *
@@ -345,7 +356,7 @@ bool alpha_active();
 
 int want_to_run_again();
 void do_interactive(int command);
-int find_builtin(const char *name, int namelen, bool strict);
+int find_builtin(const char *name, int namelen);
 
 void sst();
 void bst();

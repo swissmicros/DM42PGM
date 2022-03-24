@@ -2,6 +2,8 @@
 layout: docu
 ---
 
+# Building Instructions
+
 ## Prerequisites
 
 GNU ARM toolchain can be downloaded from

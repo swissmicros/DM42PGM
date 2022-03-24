@@ -44,4 +44,4 @@ for details.
 1. Once loaded, select "Run Program" and Free42 starts.
 
 # Building Instructions
-Read the README file.
+Read the [README_build](README_build.html) .

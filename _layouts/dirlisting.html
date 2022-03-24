@@ -1,0 +1,86 @@
+---
+layout: docu
+---
+{% assign abs_url  = page.url | absolute_url %}
+{% assign rel_url  = page.url | relative_url %}
+{% if rel_url != '/' %} {% assign base_url = abs_url | replace: rel_url, '' | append: '/' %}
+{% else %} {% assign base_url = abs_url %}
+{% endif %}
+{% assign depth = page.path | split: '/' | size %}
+{% assign pwd = page.path | replace: page.name, '' %}
+
+<div id="header">
+  <div id="toc" class="toc2">
+    <div id="toctitle">Public Repositories</div>
+    <ul class="sectlevel1">
+      <li><a href="{{ base_url }}User-Manuals">User-Manuals</a></li>
+      {% for repository in site.github.public_repositories %}
+      <li><a href="{{ base_url }}{{ repository.name | remove_first: '/' }}"> {{ repository.name | replace: '-', ' ' | replace: '_', ' ' }}</a></li>
+      {% endfor %}
+    </ul> 
+  </div>
+</div>
+
+<h2>Directory listing {{ site.github.repository_name }}{{ page.url | replace page.path, '' | replace '/', '' }}</h2>
+
+<div class="post-content">
+  {{ content }}
+</div>
+
+<!-- abs_url = {{ abs_url }}<br/> -->
+<!-- rel_url = {{ rel_url }}<br/> -->
+<!-- base_url = {{ base_url }}<br/> -->
+<!-- depth = {{ depth }} <br/> -->
+<!-- pwd = {{ pwd }} <br/> -->
+
+{% capture folders_list %}
+  {% for file in site.static_files %}
+    {% assign path = file.path | split: '/' %}
+    {% if path | size  != depth %}
+      {% if path[depth] != file.name %}
+        {% assign dif = file.path | split: pwd %}
+        {% if dif[0] == '/' || depth == 1 %}
+          {{ file.path | replace: file.name, '' }}
+          {% if forloop.last == false %}::{% endif%}
+        {% endif %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% endcapture %}
+{% assign folders = folders_list | strip_newlines | replace: ' ', '' | split: '::'| uniq | sort %}  
+<!-- folders = {{ folders | array_to_sentence_string }} <br/> -->
+
+{% capture top_folder_list %}
+  {% for folder in folders %}
+    {% assign path = folder | split: '/' %}
+      {{ path[depth] }}
+    {% if forloop.last == false %}::{% endif %}
+  {% endfor %}
+{% endcapture %}
+{% assign top_folders = top_folder_list | strip_newlines | replace: ' ', '' | split: '::' | uniq | compact | sort %}  
+<!-- top_folders = {{ top_folders | array_to_sentence_string }} <br/> -->
+
+<table class="indexlist">
+  <tbody>
+    <tr><th style="width: 20px; overflow: hidden;"></th><th style="width: 30%; overflow: hidden;">Name</th><th style="width: 70%; overflow: hidden;">Description</th></tr>
+  {% if depth != 1 %}
+    <tr><td><a href=".."><i class="fa-solid fa-folder-open"></i></a></td><td><a href="..">Parent Directory</a></td><td></td></tr>
+  {% endif %}
+
+{% for folder in top_folders %}
+   <tr><td><a href="{{ folder }}"><i class="fa-solid fa-folder"></i></a></td><td><a href="{{ folder }}">{{ folder }}</a></td><td><a href="{{ folder }}"></a></td></tr>
+{% endfor %}
+
+{% for file in site.static_files %}
+  {% assign path_s = file.path | split: '/' | size | minus: 1 %}
+  {% if path_s == depth %} 
+    {% assign dif = file.path | split: pwd %}
+    {% if dif[0] == '/' %}
+      {% assign desc = page.descriptions | where:"name", file.name | first %}
+      <tr><td><a href="{{ file.name }}"><i class="fa-solid fa-file"></i></a></td><td><a href="{{ file.name }}">{{ file.name }}</a></td><td><a href="{{ file.name }}">{{ desc.text }}</a></td></tr>
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+  </tbody>
+</table>

@@ -1,3 +1,6 @@
+---
+layout: docu
+---
 # DM42PGM - Free42 frontend implementation for DM42
 
 - There is DMCP interface doc in progress see [DMCP IFC doc](http://technical.swissmicros.com/dmcp/doc/DMCP-ifc-html/) (or

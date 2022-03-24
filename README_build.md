@@ -50,7 +50,8 @@ Contents of QSPI
 ## DM42PGM repository
 
 The latest version of DM42PGM is available at
-  https://github.com/swissmicros/DM42PGM
+  [https://github.com/swissmicros/DM42PGM](https://github.com/swissmicros/DM42PGM)
+
 
 
 

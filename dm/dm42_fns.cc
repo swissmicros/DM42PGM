@@ -1251,6 +1251,9 @@ const char *shell_platform() {
   return "DM42 " PLATFORM_VERSION;
 }
 
+const char *shell_number_format() {
+  return ".";
+}
 
 
 void shell_message(const char *message) {

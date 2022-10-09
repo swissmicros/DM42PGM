@@ -273,7 +273,7 @@ int4 core_program_size(int prgm_index);
  *
  * This function is called by the shell after the user has selected a nonempty
  * set of programs (from the list returned by core_list_programs()) and
- * confirmed the operation (supplied a file name etc.). 
+ * confirmed the operation (supplied a file name etc.).
  * The 'count' parameter indicates how many programs are to be exported; the
  * 'indexes' parameter is an array of program indexes.
  * When called by the core during state file saving, raw_file_name will be
@@ -331,6 +331,7 @@ struct core_settings_struct {
     bool matrix_outofrange;
     bool auto_repeat;
     bool allow_big_stack;
+    bool localized_copy_paste;
 };
 
 extern core_settings_struct core_settings;
@@ -370,6 +371,7 @@ void start_alpha_prgm_line();
 void finish_alpha_prgm_line();
 int shiftcharacter(char c);
 void set_old_pc(int4 pc);
+const char *number_format();
 
 
 #endif

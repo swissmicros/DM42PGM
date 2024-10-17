@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2022, SwissMicros
+Copyright (c) 2015-2024, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -356,11 +356,11 @@ typedef struct {
 
 // ----------------------------------
 
-#define PLATFORM_VERSION "3.24"
+#define PLATFORM_VERSION "3.25"
 
 // System interface version
 #define PLATFORM_IFC_CNR   3
-#define PLATFORM_IFC_VER  15
+#define PLATFORM_IFC_VER  16
 
 // STATIC_ASSERT ...
 #define ASSERT_CONCAT_(a, b) a##b
@@ -459,7 +459,7 @@ typedef struct {
 
 // Keyboard
 int read_key(int *k1, int *k2);
-
+int sys_last_scan(int *k1, int *k2);
 
 /////////////////////////////////
 // Low level diagnostics 
@@ -509,6 +509,9 @@ int qspi_user_write(uint8_t *data, int size, int offset, int erase);
 uint8_t * qspi_user_addr();
 int qspi_user_size();
 
+
+// RESET preserved region 0x10007f00-0x10007fff (L4)
+#define RESET_STATE_RAM        0x10007f00
 
 
 
@@ -948,6 +951,7 @@ void sys_sleep();
 
 // Free memory
 int sys_free_mem();
+int sys_largest_free_mem();
 
 // System
 void sys_reset();
@@ -978,6 +982,11 @@ int sys_flash_write_block(void* dst_addr, uint8_t * src_buf, uint32_t size);
 
 // ---------------------------
 
+// ---------------------------
+//  System timers
+// ---------------------------
+
+#define SYSTIM_COUNT         4
 
 
 // ----------------------------------

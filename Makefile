@@ -11,6 +11,13 @@ ifdef DEBUG
 DEBUG = 1
 endif
 
+# DMCP5 build
+ifdef DMCP5
+	PGMEXT=pg5
+else
+	PGMEXT=pgm
+endif
+
 #######################################
 # pathes
 #######################################
@@ -24,17 +31,18 @@ FREE42DIR = free42
 BIN_DIR = bin/
 
 ######################################
-# source
+# System sources
 ######################################
-C_SOURCES = 
-ASM_SOURCES = \
-  dmcp/startup_pgm.s
+C_INCLUDES += -Idmcp
+C_SOURCES += dmcp/sys/pgm_syscalls.c
+ASM_SOURCES = dmcp/startup_pgm.s
 
 #######################################
 # Custom section
 #######################################
-C_SOURCES += dmcp/sys/pgm_syscalls.c
-C_INCLUDES += -Idm -Idmcp
+
+# Includes
+C_INCLUDES += -Idm
 
 # Free42 frontend
 CXX_SOURCES += dm/dm42_fns.cc
@@ -52,7 +60,9 @@ LIBS += lib/libfree42_bcd.a lib/gcc111libbid_hard.a
 else
 LIBS += lib/libfree42_bcd_rel.a lib/gcc111libbid_hard.a
 endif
+
 # ---
+
 
 #######################################
 # binaries
@@ -80,9 +90,9 @@ CPUFLAGS += -mthumb -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 # compile gcc flags
 ASFLAGS = $(CPUFLAGS) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
-CFLAGS  = $(CPUFLAGS) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+CFLAGS += $(CPUFLAGS) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 CFLAGS += -Wno-misleading-indentation
-DBGFLAGS = -g 
+DBGFLAGS = -g
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -O0
@@ -110,7 +120,6 @@ LDFLAGS += -Wl,--gc-sections -Wl,--wrap=_malloc_r
 
 
 # default action: build all
-# $(BUILD_DIR)/$(TARGET).bin $(BUILD_DIR)/$(TARGET).hex
 all: $(BUILD_DIR)/$(TARGET).elf 
 
 #######################################
@@ -144,7 +153,7 @@ $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
 	$(OBJCOPY) --only-section   .qspi -O ihex    $@  $(BUILD_DIR)/$(TARGET)_qspi.hex
 	$(OBJCOPY) --only-section   .qspi -O binary  $@  $(BUILD_DIR)/$(TARGET)_qspi.bin
 	$(BIN_DIR)check_qspi_crc $(TARGET) dm/qspi_crc.h || ( $(MAKE) clean && false )
-	$(BIN_DIR)add_pgm_chsum build/$(TARGET)_flash.bin build/$(TARGET).pgm
+	$(BIN_DIR)add_pgm_chsum build/$(TARGET)_flash.bin build/$(TARGET).$(PGMEXT)
 	$(SIZE) $@
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)

@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2022, SwissMicros
+Copyright (c) 2015-2024, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -1168,7 +1168,7 @@ int statefile_putc(int ic, FILE *stream) {
 
 uint32_t* stat_config_ptr() {
   // Pointer to reserved area
-  uint32_t* p = (uint32_t*)(0x10007f90);
+  uint32_t* p = (uint32_t*)(RESET_STATE_RAM+0x90);
   if (p[0] != STATCONFIG_MAGIC) {
     p[0] = STATCONFIG_MAGIC;
     p[1] = 0; // Defaults
@@ -1447,7 +1447,7 @@ double shell_random_seed() {
 
 #else
 
-int64_t shell_random_seed() {
+int8 shell_random_seed() {
   DBGSHELL("shell_random_seed\n");
   dt_t dt;
   tm_t tm;
@@ -1499,7 +1499,7 @@ bool shell_clk24() {
 
 
 
-void shell_beeper(int frequency, int duration) {
+void shell_beeper_fd(int frequency, int duration) {
   DBGSHELL("shell_beeper fr=%i dur=%i\n", frequency, duration);
   // FIXME: Eat the time when BEEP is OFF?
   //if ( !ST(STAT_BEEP_MUTE) ) 
@@ -1516,7 +1516,30 @@ void shell_beeper(int frequency, int duration) {
 }
 
 
-void shell_get_time_date(uint4 *tim, uint4 *date, int *weekday) {
+void shell_beeper(int tone) {
+  int freq, dur = 250;
+  switch (tone) {
+    case  0: freq =  164; break;
+    case  1: freq =  220; break;
+    case  2: freq =  243; break;
+    case  3: freq =  275; break;
+    case  4: freq =  293; break;
+    case  5: freq =  324; break;
+    case  6: freq =  366; break;
+    case  7: freq =  418; break;
+    case  8: freq =  438; break;
+    case  9: freq =  550; break;
+    case 10: freq = 1835; dur = 125; break;
+    default: return;
+  }
+  shell_beeper_fd(freq, dur);
+}
+
+
+
+
+
+void shell_get_time_date(uint4 *time, uint4 *date, int *weekday) {
 #ifndef DBG_NOLCD
   DBGSHELL("shell_get_time_date\n");
 #endif
@@ -1525,8 +1548,8 @@ void shell_get_time_date(uint4 *tim, uint4 *date, int *weekday) {
   tm_t tm;
 
   rtc_read(&tm, &dt);
-  if(tim)
-    *tim  = ((tm.hour*100 + tm.min)*100 + tm.sec)*100 + tm.csec; // 12345600;
+  if(time)
+    *time  = ((tm.hour*100 + tm.min)*100 + tm.sec)*100 + tm.csec; // 12345600;
   if(date)
     *date = dt.year*10000 + dt.month*100 + dt.day; // 20160103;
   if(weekday)
@@ -1649,7 +1672,7 @@ int shell_write(const char *buf, int4 buflen) {
 }
 #endif
 
-uint4 shell_get_mem() {
+uint8 shell_get_mem() {
   DBGSHELL("shell_get_mem: %i\n", sys_free_mem());
   return sys_free_mem(); // Returns free mem
 }
@@ -3056,9 +3079,17 @@ void disp_regs(int what) {
 
     int pgm_line = last_pgm_top_line;
     int pgm_line_end = last_pgm_top_line + font_lines;
+    int is_edit = is_program_line_entry();
     for( ; !pln.is_end && pgm_line < pgm_line_end; pgm_line++ ) {
-      len = get_pgm_line(&pln, pgm_line);
       if ( pgm_line == pi.pgm_line ) {
+        if (is_edit) {
+          // Edit -> pgm pointer already on next instruction
+          // .. just increment line number
+          pln.line++;
+        } else {
+          // No edit -> skip program line
+          len = get_pgm_line(&pln, pgm_line);
+        }
         if (is_show) {
           // Display both lines
           hp2font(bb,tlcd[0],LCD_HP_CHARS);
@@ -3068,6 +3099,7 @@ void disp_regs(int what) {
         hp2font(bb,tlcd[pi.y_row],LCD_HP_CHARS);
         lcd_putsAt(fReg, last_line++, bb);
       } else {
+        len = get_pgm_line(&pln, pgm_line);
         hp2font(pb,pb,len);
         lcd_putsAt(fReg, last_line++, pb);
       }
@@ -3461,14 +3493,18 @@ void disp_header() {
 
 
 
-
+void call_core_keydown(int key) {
+  bool a;
+  int  b;
+  core_keydown(key, &a, &b);
+}
 
 
 void clr_shift() {
   if ( ANN(SHIFT) ) {
     int key = 28; // Turn off shift
     printf("clr_shift: key press %i\n",key);
-    core_keydown(key, NULL, NULL);
+    call_core_keydown(key);
   }
 }
 
@@ -3476,7 +3512,7 @@ void set_shift() {
   if ( !ANN(SHIFT) ) {
     int key = 28; // Turn off shift
     printf("set_shift: key press %i\n",key);
-    core_keydown(key, NULL, NULL);
+    call_core_keydown(key);
   }
 }
 
@@ -3925,7 +3961,8 @@ void program_main() {
 
 
     if (key == KEY_SCREENSHOT) {
-      start_buzzer_freq(4400); sys_delay(10); stop_buzzer();
+      //start_buzzer_freq(4400); sys_delay(10); stop_buzzer();
+      start_buzzer_freq(2000000); sys_delay(15); stop_buzzer();
       // Turn OFF SHIFT
       if ( ANN(SHIFT) )
         keep_running = core_keydown(KEY_SHIFT, &enqueued, &repeat);
@@ -3934,7 +3971,8 @@ void program_main() {
         wait_for_key_press();
         calc_lcd_redraw();
       }
-      start_buzzer_freq(8800); sys_delay(10); stop_buzzer();
+      //start_buzzer_freq(8800); sys_delay(10); stop_buzzer();
+      start_buzzer_freq(3000000); sys_delay(15); stop_buzzer();
       key = -1;
     }
 
@@ -4021,7 +4059,7 @@ void program_main() {
         wait_for_key_release(-1);
       } else {
         // Just beep :)
-        shell_beeper(1835, 125);
+        shell_beeper(10);
       }
     }
 

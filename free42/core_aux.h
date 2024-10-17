@@ -91,6 +91,7 @@ typedef struct {
 } pgm_line_t;
 
 
+int is_program_line_entry();
 void pgm_line_init(pgm_line_t * p, char * buf, int buflen);
 int get_pgm_line(pgm_line_t * p, int line);
 

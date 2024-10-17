@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2022, SwissMicros
+Copyright (c) 2015-2024, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -44,8 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __PGM_MAIN_H__
 
 #define PROGRAM_NAME    "DM42PGM"
-#define DM42_VERSION    "3.22"
-#define F42_VERSION     "3.0.15b"
+#define DM42_VERSION    "3.23"
+#define F42_VERSION     "3.1.8"
 #define PROGRAM_VERSION DM42_VERSION "/" F42_VERSION
 
 // Disable printf traces for release build

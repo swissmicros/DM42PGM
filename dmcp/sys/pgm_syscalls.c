@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2022, SwissMicros
+Copyright (c) 2015-2024, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -126,6 +126,25 @@ int _getpid(void)
 	return 1;
 }
 
+
+
+// Remove any debug substitutions
+
+#ifdef malloc
+#undef malloc
+#endif
+
+#ifdef free
+#undef free
+#endif
+
+#ifdef calloc
+#undef calloc
+#endif
+
+#ifdef realloc
+#undef realloc
+#endif
 
 
 void free(void *ptr) {

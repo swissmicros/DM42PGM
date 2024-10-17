@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2022, SwissMicros
+Copyright (c) 2015-2024, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -236,3 +236,5 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define qspi_user_addr (*(typeof(qspi_user_addr)*)(LIBRARY_FN_BASE+760))
 #define qspi_user_size (*(typeof(qspi_user_size)*)(LIBRARY_FN_BASE+764))
 #define f_unlink (*(typeof(f_unlink)*)(LIBRARY_FN_BASE+768))
+#define sys_last_scan (*(typeof(sys_last_scan)*)(LIBRARY_FN_BASE+772))
+#define sys_largest_free_mem (*(typeof(sys_largest_free_mem)*)(LIBRARY_FN_BASE+776))

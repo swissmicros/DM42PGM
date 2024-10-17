@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2022  Thomas Okken
+ * Copyright (C) 2004-2024  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -152,8 +152,11 @@ bool core_keydown(int key, bool *enqueued, int *repeat);
  * mapping by creating a macro that performs XEQ and spells out the command
  * name, or selects the command from a menu or the FCN catalog, all of which
  * have potentially undesirable side effects.
+ * The is_text parameter signals that the command is actually literal text to
+ * be entered. This should only happen when ALPHA is active. This corresponds
+ * to secondary macros with '' delimiters.
  */
-bool core_keydown_command(const char *name, bool *enqueued, int *repeat);
+bool core_keydown_command(const char *name, bool is_text, bool *enqueued, int *repeat);
 
 /* core_repeat()
  *

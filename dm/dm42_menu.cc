@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2024, SwissMicros
+Copyright (c) 2015-2025, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -165,7 +165,7 @@ int lcd_for_dm42(int what) {
       t20->y += h2-5;
       lcd_print(t20, "DM42 v" DM42_VERSION " (C) SwissMicros GmbH");
       t20->y += h2;
-      lcd_print(t20, "%s (C) 2004-2024, Thomas Okken", free42_version_str());
+      lcd_print(t20, "%s (C) 2004-2025, Thomas Okken", free42_version_str());
       t20->y += h2;
       lcd_puts(t20, "Intel Decimal FloatingPointMath Lib v2.0u1");
       lcd_puts(t20, "  (C) 2007-2018, Intel Corp.");
@@ -699,6 +699,7 @@ const uint8_t mid_menu[] = {
     MI_SETTINGS,
     MI_SYSTEM_ENTER,
     MI_ABOUT_PGM,
+//    MI_DEVEL_TEST,
     0 }; // Terminator
 
 
@@ -736,6 +737,12 @@ const uint8_t mid_settings[] = {
     MI_BEEP_MUTE,
     MI_SLOW_AUTOREP,
     MI_STACK_CONFIG,
+    MI_DYNSTACKEXT,
+    //MI_DYNSTACK_MENU, // testing only
+    0 }; // Terminator
+
+
+const uint8_t mid_dynstack_menu[] = {
     MI_DYNSTACKEXT,
     0 }; // Terminator
 
@@ -796,10 +803,22 @@ int stack_menu_index() {
 
 
 
+const char* const dynstack_info[] = {
+// 123456789012345678901234567890|
+  " This option only enables the",
+  " >>> Dynamic Stack Extension <<<",
+  " Use the NSTK command to begin",
+  " Big Stack mode, and the 4STK",
+  " command to rtn to the XYZT stack.",
+  NULL
+};
+
+
 const smenu_t         MID_MENU = { "Setup",  mid_menu,   NULL, NULL };
 const smenu_t         MID_FILE = { "File",   mid_file,   NULL, NULL };
 const smenu_t        MID_PRINT = { "Printing", mid_print, NULL, NULL };
 const smenu_t     MID_SETTINGS = { "Settings",  mid_settings,  NULL, NULL};
+const smenu_t     MID_DYNSTACK = { "Dynamic Stack",  mid_dynstack_menu,  dynstack_info, NULL};
 const smenu_t MID_STACK_CONFIG = { "Stack Layout", mid_stack, NULL, NULL};
 const smenu_t    MID_STATEFILE = { "Calculator State", mid_statefile, NULL, NULL};
 const smenu_t       MID_TOPBAR = { "Status Bar", mid_topbar, NULL, NULL};
@@ -889,6 +908,9 @@ int run_menu_item(uint8_t line_id) {
   case MI_STACK_CONFIG:
     handle_menu(&MID_STACK_CONFIG,MENU_ADD,stack_menu_index());
     break;
+  case MI_DYNSTACK_MENU:
+    handle_menu(&MID_DYNSTACK, MENU_ADD, 0);
+    break;
   case MI_DYNSTACKEXT:
     set_dynstackext(!get_dynstackext());
     break;
@@ -952,6 +974,10 @@ int run_menu_item(uint8_t line_id) {
   case MI_ABOUT_PGM:
     lcd_for_dm42(DISP_ABOUT);
     wait_for_key_press();
+    break;
+
+  case MI_DEVEL_TEST:
+    devel_test();
     break;
 
    default:
@@ -1032,6 +1058,7 @@ const char * menu_line_str(uint8_t line_id, char * s, const int slen) {
   case MI_STACK_CONFIG:
     ln = layout_str(s, "Stack Layout");              break;
 
+  case MI_DYNSTACK_MENU:ln ="Dynamic Stack >";       break;
   case MI_DYNSTACKEXT:  ln = opt_str(s, " Dynamic Stack Extension", get_dynstackext()); break;
 
   case MI_STACK_XYZTL:  ln = orb_str(s, "XYZTL", get_stack_layout() == STACK_XYZTL); break;
@@ -1054,6 +1081,7 @@ const char * menu_line_str(uint8_t line_id, char * s, const int slen) {
 
   case MI_SETTINGS:     ln = "Settings >";           break;
   case MI_ABOUT_PGM:    ln = "About >";              break;
+  case MI_DEVEL_TEST:   ln = "Devel Test >";         break;
 
   case MI_STACK_AREA:   ln = "Stack Font Sizes >";         break;
   case MI_SA_REG_X:     ln = nr_str(s, "Font Size Offset Reg X", get_reg_font_offset(LINE_REG_X) ); break;

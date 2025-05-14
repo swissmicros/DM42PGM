@@ -1,0 +1,15 @@
+diff --git a/DM32S/stm32_program.ld b/DM32S/stm32_program.ld
+index 0ea157f2..bb8066a5 100644
+--- a/DM32S/stm32_program.ld
++++ b/DM32S/stm32_program.ld
+@@ -29,8 +29,8 @@ MEMORY
+ /* FLASH   (rx) : ORIGIN =  0x8000000, LENGTH = 1024K */
+ /* RAM    (xrw) : ORIGIN = 0x20000000, LENGTH =   96K  */
+ /* RAM0   (xrw) : ORIGIN = 0x10000000, LENGTH =   32K-256 */
+-FLASH   (rx) : ORIGIN =  0x8050000, LENGTH =  704K
+-RAM    (xrw) : ORIGIN = 0x10000000, LENGTH =    8K
++FLASH   (rx) : ORIGIN =  0x80a0000, LENGTH = 1024K
++RAM    (xrw) : ORIGIN = 0x28000000, LENGTH =    8K
+ QSPI    (rx) : ORIGIN = 0x90000000, LENGTH = 2048K
+ }
+ 

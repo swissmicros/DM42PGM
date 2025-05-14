@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Free42 -- an HP-42S calculator simulator
- * Copyright (C) 2004-2024  Thomas Okken
+ * Copyright (C) 2004-2025  Thomas Okken
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2,
@@ -316,6 +316,17 @@ char *core_copy();
  */
 void core_paste(const char *s);
 
+#if defined(ANDROID) || defined(IPHONE)
+
+/* core_get_char_pixels()
+ *
+ * Gets character pixels from the calculator's 8x5 characters, for the
+ * given UTF-8 encoded character, provided as a null-terminated string.
+ */
+void core_get_char_pixels(const char *ch, char *pixels);
+
+#endif
+
 /* core_update_allow_big_stack()
  *
  * Updates the big stack state and the UI to reflect a change in the
@@ -357,8 +368,8 @@ void set_alpha_entry(bool state);
 void set_running(bool state);
 bool program_running();
 bool alpha_active();
+int dequeue_key();
 
-int want_to_run_again();
 void do_interactive(int command);
 int find_builtin(const char *name, int namelen);
 
@@ -370,7 +381,7 @@ int find_menu_key(int key);
 void start_incomplete_command(int cmd_id);
 void finish_command_entry(bool refresh);
 void finish_xeq();
-void start_alpha_prgm_line();
+bool start_alpha_prgm_line();
 void finish_alpha_prgm_line();
 int shiftcharacter(char c);
 void set_old_pc(int4 pc);

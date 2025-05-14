@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2024, SwissMicros
+Copyright (c) 2015-2025, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -110,6 +110,9 @@ extern const smenu_t   MID_STACK_AREA; // Stack area config
 #define MI_PRINT_DBLNL     66
 
 #define MI_DYNSTACKEXT     67
+#define MI_DYNSTACK_MENU   68
+
+#define MI_DEVEL_TEST      77
 
 // --------------------------------
 
@@ -142,5 +145,7 @@ void start_help();
 void init_sf_buf();
 void deinit_sf_buf();
 
+// Devel test
+void devel_test();
 
 #endif

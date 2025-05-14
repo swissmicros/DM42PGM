@@ -2,7 +2,7 @@
 
 BSD 3-Clause License
 
-Copyright (c) 2015-2024, SwissMicros
+Copyright (c) 2015-2025, SwissMicros
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -260,9 +260,22 @@ int hp2utfchar(char * s, unsigned char c) {
     case 31:   u = "■";      break;
     case 127:  u = "├";      break;
 
-    case 128:  u = ":";      break;
-    case 129:  u = "Y";      break;
-    case 138:  u = "␊";      break;
+    case 0x80: u = ":";      break;
+    case 0x81: u = "Y";      break;
+
+    // New characters
+    case 0x82: u = "Ω";      break;
+    case 0x83: u = "ᴛ";      break;
+    case 0x84: u = "ʟ";      break;
+    case 0x85: u = "ᴀ";      break;
+    case 0x86: u = "▹";      break;
+    case 0x87: u = "◬";      break;
+    case 0x88: u = "«";      break;
+    case 0x89: u = "»";      break;
+
+    // ??? 
+    case 0x8a: u = "␊";      break;
+
     default:
       s[0] = c & 0x7f;
       return 1;
@@ -272,6 +285,24 @@ int hp2utfchar(char * s, unsigned char c) {
 }
 
 
+
+
+char hp2font8x(unsigned char c) {
+  unsigned char cc = 0;
+  switch (c) {
+    case 0x1e: cc = 0xa3; break;
+    case 0x81: cc = 'Y'; break;
+    case 0x82: cc = 0xa2; break;
+    case 0x83: cc = 'T'; break;
+    case 0x84: cc = 'L'; break;
+    case 0x85: cc = 'A'; break;
+    case 0x86: cc = 0xa4; break;
+    case 0x87: cc = 0xa5; break;
+    case 0x88: cc = 0xa6; break;
+    case 0x89: cc = 0xa7; break;
+  }
+  return cc;
+}
 
 
 int hp2font(char *dst, const char *src, int srclen) {
@@ -284,9 +315,10 @@ int hp2font(char *dst, const char *src, int srclen) {
       dst[d++] = ':';
       continue; 
     }
-    if (c == 0x81) { dst[d++] = 'Y';    continue; }
+    char cc = hp2font8x(c);
+    if (cc != 0) { dst[d++] = cc;  continue; }
     c &= 0x7f;
-    if (c < ' ')   { dst[d++] = c|0x80; continue; }
+    if (c < ' ') { dst[d++] = c|0x80; continue; }
     dst[d++] = c;
   }
   dst[d] = 0;
@@ -1211,6 +1243,47 @@ void set_stat_config_bit(uint32_t mask, int val) {
 
 
 
+void disp_f42_font() {
+  lcd_clear_buf();
+  lcd_writeClr(t24);
+
+  lcd_switchFont(fReg, -1);
+
+  const int lnlen = 32;
+  char s[lnlen+8],d[lnlen+8];
+
+  int ln = 0;
+
+  lcd_putsAt(fReg, ln++, " 0123456789ABCDEF0123456789ABCDEF");
+
+  int chcnt = 0x8a; // Char count in new font
+  for(int o=0; o<chcnt; o+=lnlen)
+  {
+    int sz = 0;
+    for(int x=0; x<lnlen; x++) {
+      if (x+o == chcnt) break;
+      s[x] = x+o;
+      sz += 1;
+    }
+    d[0] = '0' + (o>>4);
+    hp2font(d+1, s, sz);
+    lcd_putsAt(fReg, ln++, d);
+  }
+
+  lcd_refresh();
+  wait_for_key_press();
+}
+
+
+
+
+void devel_test() {
+  //disp_f42_font();
+}
+
+
+
+
 /*
 ▄▄▄▄▄▄▄  ▄▄▄▄  ▄▄▄▄    ▄▄▄▄         ▄    ▄          ▀                  ▀▀█                                  ▄               █ 
    █    ▄▀  ▀▄ █   ▀▄ ▄▀  ▀▄        █    █ ▄ ▄▄   ▄▄▄    ▄▄▄▄▄  ▄▄▄▄     █     ▄▄▄   ▄▄▄▄▄   ▄▄▄   ▄ ▄▄   ▄▄█▄▄   ▄▄▄    ▄▄▄█ 
@@ -1248,8 +1321,9 @@ int shell_get_heading(double*, double*, double*, double*, double*, double*) {
 
 
 const char *shell_platform() {
-  return "DM42 " PLATFORM_VERSION;
+  return F42_VERSION " DM42 " DM42_VERSION;
 }
+
 
 const char *shell_number_format() {
   return ".";
@@ -2993,6 +3067,14 @@ void disp_reg(const char *prompt, reg_id_t reg_id, int line_reg_nr, int bottom_u
 }
 
 
+
+int is_plock_disp() {
+  if (!is_cur_pgm_locked()) return 0;
+  return !strncmp(tlcd[0],"Program Locked",14);
+}
+
+
+
 void disp_regs(int what) {
   static int last_pgm_top_line = 0;
   char bb[LCD_HP_CHARS+2];
@@ -3096,6 +3178,7 @@ void disp_regs(int what) {
           lcd_putsAt(fReg, last_line++, bb);
           pi.y_row=1;
         }
+        if (is_plock_disp()) pi.y_row = 0;
         hp2font(bb,tlcd[pi.y_row],LCD_HP_CHARS);
         lcd_putsAt(fReg, last_line++, bb);
       } else {

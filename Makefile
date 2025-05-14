@@ -91,13 +91,13 @@ CPUFLAGS += -mthumb -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # compile gcc flags
 ASFLAGS = $(CPUFLAGS) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 CFLAGS += $(CPUFLAGS) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
-CFLAGS += -Wno-misleading-indentation
+CFLAGS += -Wno-misleading-indentation -Wno-unknown-pragmas
 DBGFLAGS = -g
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -O0
 else
-CFLAGS += -O2 -DFW_RELEASE
+CFLAGS += -Os -DFW_RELEASE
 endif
 
 CFLAGS  += $(DBGFLAGS)

@@ -1,0 +1,15 @@
+diff --git a/DM42PGM/dmcp/dmcp.h b/DM42PGM/dmcp/dmcp.h
+index fed708ab..c7833373 100644
+--- a/DM42PGM/dmcp/dmcp.h
++++ b/DM42PGM/dmcp/dmcp.h
+@@ -468,8 +468,8 @@ uint8_t * qspi_user_addr();
+ int qspi_user_size();
+ 
+ 
+-// RESET preserved region 0x10007f00-0x10007fff (L4)
+-#define RESET_STATE_RAM        0x10007f00
++// RESET preserved region 0x28003f00-0x28003fff (U5)
++#define RESET_STATE_RAM        0x28003f00
+ 
+ 
+ 

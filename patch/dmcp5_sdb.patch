@@ -1,0 +1,13 @@
+diff --git a/DM32S/dmcp/dmcp.h b/DM32S/dmcp/dmcp.h
+index 2d9b7610..33cf69b4 100644
+--- a/DM32S/dmcp/dmcp.h
++++ b/DM32S/dmcp/dmcp.h
+@@ -309,7 +309,7 @@ typedef struct {
+ #define t24             (sdb.pds_t24)
+ #define fReg            (sdb.pds_fReg)
+ 
+-#define sdb (*((sys_sdb_t*)0x10002000))
++#define sdb (*((sys_sdb_t*)0x20000000))
+ 
+ 
+ // ----------------------------------

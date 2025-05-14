@@ -61,6 +61,9 @@ int is_dmy();
 // Is program mode
 int is_pgm_mode();
 
+// Is current program locked
+int is_cur_pgm_locked();
+
 // Set clk24 flag
 void set_clk24(int val);
 

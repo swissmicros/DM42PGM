@@ -1,0 +1,11 @@
+diff --git a/DM32S/dmcp/lft_ifc.h b/DM32S/dmcp/lft_ifc.h
+index a67656cb..3b9f0801 100644
+--- a/DM32S/dmcp/lft_ifc.h
++++ b/DM32S/dmcp/lft_ifc.h
+@@ -1,5 +1,5 @@
+ 
+-#define LIBRARY_FN_BASE   0x08000201
++#define LIBRARY_FN_BASE   0x08000301
+ 
+ #define __sysfn_malloc (*(typeof(malloc)*)(LIBRARY_FN_BASE+0))
+ #define __sysfn_free (*(typeof(free)*)(LIBRARY_FN_BASE+4))

@@ -1276,12 +1276,14 @@ void disp_f42_font() {
 
 
 
+#ifndef TESTL
 
 void devel_test() {
   //disp_f42_font();
+  //int *p = 0; p[0] = 1234;
 }
 
-
+#endif
 
 
 /*
@@ -1379,6 +1381,10 @@ void shell_print(const char *text, int length,
     if (is_print_to_file(PRTOF_NOIR))
       return;
 
+#if TESTL
+    return;
+#endif
+
     // Display graphics
     if ( !printer_was_graphics ) {
       print_byte(4); // Print line and leave print head at right; use before each line of graphics to ensure that multiple lines of graphics line up vertically.
@@ -1423,6 +1429,10 @@ void shell_print(const char *text, int length,
 
   if (is_print_to_file(PRTOF_NOIR))
     return;
+
+#if TESTL
+  return;
+#endif
   
   lcd_refresh(); // Show annunciator
   print_wait_for(PRINT_TXT_LN);
@@ -1924,6 +1934,7 @@ void thell_draw_menu_key(int n, int highlight, const char *s, int length) {
 
   disp_was_menu_drawn = 1; // Note the menu was actually drawn
 
+#ifndef TESTL
   // Free42 always starts menu drawing by first key, paint backgroung before first item
   if (n == 0)
     lcd_draw_menu_bg();
@@ -1942,6 +1953,7 @@ void thell_draw_menu_key(int n, int highlight, const char *s, int length) {
   t[j]=0;
 
   lcd_draw_menu_key(n, t, highlight);
+#endif
 }
 
 
@@ -3074,6 +3086,7 @@ int is_plock_disp() {
 }
 
 
+#ifndef TESTL
 
 void disp_regs(int what) {
   static int last_pgm_top_line = 0;
@@ -3373,6 +3386,7 @@ void disp_regs(int what) {
 
 }
 
+#endif
 
 
 void empty_keydown() {
@@ -3467,6 +3481,7 @@ void calc_lcd_redraw() {
 uint8_t last_header_clk24 = 0;
 uint8_t last_header_dmy = 0;
 
+#ifndef TESTL
 
 void disp_header() {
   // Refresh header each second
@@ -3571,7 +3586,7 @@ void disp_header() {
   clear_header_timeout();
 }
 
-
+#endif
 
 
 
@@ -3688,6 +3703,7 @@ void program_main() {
       } else {
         printf("Idle: before init\n");
       }
+      quitting = 0; // Calm Free42 we aren't quitters
     }
 
     if ( keep_running || !key_empty() ) {

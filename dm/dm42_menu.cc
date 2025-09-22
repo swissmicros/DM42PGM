@@ -87,7 +87,7 @@ void after_fat_format_dm42() {
  █    █ ▀█▄▄▀  █   █  ▀▄▄▀█           █    ▀▄▄▀█  █   █  ▀█▄▄▀    ▀▄▄  ▄▄█▄▄  ▀█▄█▀  █   █  ▀▄▄▄▀ */
 
 
-
+#ifndef TESTL
 
 int lcd_for_dm42(int what) {
   int refresh = 1;
@@ -140,7 +140,7 @@ int lcd_for_dm42(int what) {
       lcd_putsAt(t24, 5,"root directory items?");
       lcd_putsAt(t24, 7,"    Press EXIT key to continue...");
       break;
-
+#if 0
     case DISP_NEW_HELP:
       lcd_putsR(t24, "Missing help file");
       lcd_puts(t24, "");
@@ -152,7 +152,7 @@ int lcd_for_dm42(int what) {
       t24->y = LCD_Y; lcd_prevLn(t24);
       lcd_puts(t24, "  Press any key to continue...");
       break;
-
+#endif
     case DISP_ABOUT:
       // Just base of original system about
       t24->y = lcd_for_calc(DISP_ABOUT);
@@ -183,10 +183,89 @@ int lcd_for_dm42(int what) {
 }
 
 
+// ---------------------------------------------------
+//   Help File
+// ---------------------------------------------------
 
+
+void disp_qr_code(const uint8_t *q, int xo, int yo, int z) {
+  int w = *q++;
+  int c=0, d=0;
+
+  int y = yo;
+  for(int yy=0; yy<w; yy++,y+=z) {
+    int x = xo;
+    for(int xx=0; xx<w; xx++,x+=z) {
+      if (c==0) { d = *q++; c = 8; }
+      lcd_fill_rect(x,y, z,z, d&1);
+      d >>= 1; c--;
+    }
+  }
+}
+
+uint8_t help_qrcode[107] = {
+  29,
+  0x7f,0x92,0xc9,0x3f,0x88,0x3f,0x0b,0x76,0x5d,0x61,0xdd,0x2e,0x07,0xae,0xdb,0x45,
+  0xe8,0x74,0x83,0x04,0xbd,0xe0,0x5f,0x55,0xf5,0x07,0xb8,0x7d,0x00,0xf7,0x7d,0x7b,
+  0x04,0x84,0x21,0x4e,0xee,0x8b,0x90,0x74,0x0a,0xb8,0xfb,0x74,0x9c,0x3b,0xa6,0x79,
+  0x41,0xe4,0xa4,0x5b,0x8c,0xa1,0x56,0x58,0x3d,0x54,0xe7,0xa6,0x63,0x5a,0x56,0xe7,
+  0xce,0xe6,0x47,0x59,0x67,0x53,0xbd,0x29,0x15,0xad,0xbb,0x1f,0x00,0xfa,0x32,0xfa,
+  0xdf,0x81,0xd6,0x0e,0xfa,0xf1,0x58,0x5d,0x75,0xf3,0xb1,0x4b,0xe3,0xb1,0x76,0xdd,
+  0x3c,0xce,0xa0,0xb5,0x5f,0xf4,0xf7,0xf9,0xbf,0x01};
 
 
 #define DM42_HELP_FILE  "/HELP/dm42help.htm"
+
+
+void no_help_file() {
+  int upd = 1;  
+
+  for(;;) {
+    if (upd) {
+      lcd_writeClr(t24);
+      lcd_clear_buf();
+
+      lcd_putsR(t24, "Missing help file");
+      t24->y += 8;
+
+      if (upd == 1) {
+        //            |012345678901234567|
+        lcd_puts(t24, "File dm42help.htm");
+        lcd_puts(t24, "is missing. Please,");
+        lcd_puts(t24, "download it and ");
+        lcd_puts(t24, "place it into ");
+        lcd_puts(t24, "/HELP/ directory.");
+        disp_qr_code(help_qrcode, 204,33, 5);
+      } else {
+        lcd_puts(t24, "Help file /HELP/dm42help.htm is");
+        lcd_puts(t24, "missing. Please, download it from");
+        lcd_puts(t24, "https://technical.swissmicros.com/");
+        lcd_puts(t24, "dm42/fat/HELP/");
+        lcd_puts(t24, "and place it into /HELP/ directory.");
+      }
+      //t24->y = LCD_Y; lcd_prevLn(t24);
+      //lcd_puts(t24, "  Press any key to continue...");
+
+      const char * menu[] = {"QR","URL","","","",""};
+      lcd_draw_menu_keys(menu);
+      lcd_refresh();
+
+      upd = 0;
+      wait_for_key_release(-1);
+    }
+
+    int k1 = runner_get_key(NULL);
+    if ( IS_EXIT_KEY(k1) || k1 == KEY_ENTER)
+      return;
+    if ( is_menu_auto_off() )
+      return;
+    if ( k1 == KEY_F1 ) upd = 1;
+    if ( k1 == KEY_F2 ) upd = 2;
+  }
+}
+
+
+
 
 void start_help() {
 
@@ -199,16 +278,13 @@ void start_help() {
       sys_disk_write_enable(0);
     } else {
       // No help file -> display note
-      lcd_for_dm42(DISP_NEW_HELP);
-      wait_for_key_press();
+      //lcd_for_dm42(DISP_NEW_HELP); wait_for_key_press();
+      no_help_file();
       return;
     }
   }
   run_help_file(DM42_HELP_FILE);
 }
-
-
-
 
 
 
@@ -248,12 +324,19 @@ int pgm_import_enter(const char * fpath, const char * fname, void * data) {
   return 0; // Continue in the file list
 }
 
+#endif
+
+
 
 typedef struct {
   int pgm_cnt;
   int pgm_indices[MAX_PGM_SEL];
 } pgm_import_sel_t;
 
+int pgm_import_enter(const char * fpath, const char * fname, void * data);
+int pgm_export_enter(const char * fpath, const char * fname, void * data);
+
+#ifndef TESTL
 
 int pgm_export_enter(const char * fpath, const char * fname, void * data) {
   
@@ -302,6 +385,9 @@ int pgm_export_enter(const char * fpath, const char * fname, void * data) {
 
   return MRET_EXIT;
 }
+
+#endif
+
 
 
 void run_reset_state_file() {
@@ -449,6 +535,9 @@ int save_statefile(const char * fpath, const char * fname, void * data) {
 
 STATIC_ASSERT( (AUX_BUF_PGM_LIST_SIZE+AUX_BUF_SELS_SIZE) <= AUX_BUF_SIZE, "(AUX_BUF_PGM_LIST_SIZE+AUX_BUF_SELS_SIZE) <= AUX_BUF_SIZE");
 
+int select_programs(const char * title, int * pgm_indices, int * pgm_cnt);
+
+#ifndef TESTL
 
 int select_programs(const char * title, int * pgm_indices, int * pgm_cnt) {
   char bb[32];
@@ -629,6 +718,9 @@ int select_programs(const char * title, int * pgm_indices, int * pgm_cnt) {
   return 1;
 }
 
+#endif
+
+
 
 void pgm_export() {
   int res;
@@ -715,7 +807,9 @@ const uint8_t mid_print[] = {
     MI_PRTOF_GRAPH,
     MI_PRTOF_TEXT,
     MI_PRTOF_GR_IN_TXT,
+#ifndef TESTL
     MI_PRTOF_NOIR,
+#endif
     MI_PRINT_DBLNL,
     0 }; // Terminator
 
@@ -732,11 +826,15 @@ const uint8_t mid_statefile[] = {
 const uint8_t mid_settings[] = {
     MI_SET_TIME,
     MI_SET_DATE,
+#ifndef TESTL
     MI_TOPBAR_MENU,
     MI_STACK_AREA,
+#endif
     MI_BEEP_MUTE,
     MI_SLOW_AUTOREP,
+#ifndef TESTL
     MI_STACK_CONFIG,
+#endif
     MI_DYNSTACKEXT,
     //MI_DYNSTACK_MENU, // testing only
     0 }; // Terminator

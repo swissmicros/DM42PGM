@@ -364,10 +364,13 @@ extern int repeating_key;
 /* Other functions */
 /*******************/
 
+extern bool quitting;
+
 void set_alpha_entry(bool state);
 void set_running(bool state);
 bool program_running();
 bool alpha_active();
+void set_annunciators(int updn, int shf, int prt, int run, int g, int rad);
 int dequeue_key();
 
 void do_interactive(int command);
@@ -376,7 +379,6 @@ int find_builtin(const char *name, int namelen);
 void sst();
 void bst();
 
-void fix_thousands_separators(char *buf, int *bufptr);
 int find_menu_key(int key);
 void start_incomplete_command(int cmd_id);
 void finish_command_entry(bool refresh);

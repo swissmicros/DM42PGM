@@ -110,7 +110,10 @@ extern const smenu_t   MID_STACK_AREA; // Stack area config
 #define MI_PRINT_DBLNL     66
 
 #define MI_DYNSTACKEXT     67
-#define MI_DYNSTACK_MENU   68
+//#define MI_DYNSTACK_MENU   68
+#define MI_F42CONF_MENU    69
+#define MI_F42C_MXSING     70
+#define MI_F42C_MXOVFL     71
 
 #define MI_DEVEL_TEST      77
 
@@ -147,5 +150,17 @@ void deinit_sf_buf();
 
 // Devel test
 void devel_test();
+
+
+// Program import/export
+int pgm_import_enter(const char * fpath, const char * fname, void * data);
+int pgm_export_enter(const char * fpath, const char * fname, void * data);
+
+void run_reset_state_file();
+int load_statefile(const char * fpath, const char * fname, void * data);
+
+int select_programs(const char * title, int * pgm_indices, int * pgm_cnt);
+void pgm_export();
+
 
 #endif

@@ -188,30 +188,19 @@ int lcd_for_dm42(int what) {
 // ---------------------------------------------------
 
 
-void disp_qr_code(const uint8_t *q, int xo, int yo, int z) {
-  int w = *q++;
-  int c=0, d=0;
+void draw_helpfile_qrcode() {
+  const int QRver = 4;
+  const int QRecc = ECC_MEDIUM;
+  QRCode qrcode;
+  uint8_t *qrcodeBytes = (uint8_t*)aux_buf_ptr()+512;
 
-  int y = yo;
-  for(int yy=0; yy<w; yy++,y+=z) {
-    int x = xo;
-    for(int xx=0; xx<w; xx++,x+=z) {
-      if (c==0) { d = *q++; c = 8; }
-      lcd_fill_rect(x,y, z,z, d&1);
-      d >>= 1; c--;
-    }
-  }
+  char *buf = aux_buf_ptr();
+  strcpy(buf, "https://technical.swissmicros.com/dm42/fat/HELP/");
+
+  // Encode and display
+  qrcode_initText(&qrcode, qrcodeBytes, QRver, QRecc, buf);
+  qrcode_disp(&qrcode, 208,36, 5);
 }
-
-uint8_t help_qrcode[107] = {
-  29,
-  0x7f,0x92,0xc9,0x3f,0x88,0x3f,0x0b,0x76,0x5d,0x61,0xdd,0x2e,0x07,0xae,0xdb,0x45,
-  0xe8,0x74,0x83,0x04,0xbd,0xe0,0x5f,0x55,0xf5,0x07,0xb8,0x7d,0x00,0xf7,0x7d,0x7b,
-  0x04,0x84,0x21,0x4e,0xee,0x8b,0x90,0x74,0x0a,0xb8,0xfb,0x74,0x9c,0x3b,0xa6,0x79,
-  0x41,0xe4,0xa4,0x5b,0x8c,0xa1,0x56,0x58,0x3d,0x54,0xe7,0xa6,0x63,0x5a,0x56,0xe7,
-  0xce,0xe6,0x47,0x59,0x67,0x53,0xbd,0x29,0x15,0xad,0xbb,0x1f,0x00,0xfa,0x32,0xfa,
-  0xdf,0x81,0xd6,0x0e,0xfa,0xf1,0x58,0x5d,0x75,0xf3,0xb1,0x4b,0xe3,0xb1,0x76,0xdd,
-  0x3c,0xce,0xa0,0xb5,0x5f,0xf4,0xf7,0xf9,0xbf,0x01};
 
 
 #define DM42_HELP_FILE  "/HELP/dm42help.htm"
@@ -235,7 +224,7 @@ void no_help_file() {
         lcd_puts(t24, "download it and ");
         lcd_puts(t24, "place it into ");
         lcd_puts(t24, "/HELP/ directory.");
-        disp_qr_code(help_qrcode, 204,33, 5);
+        draw_helpfile_qrcode();
       } else {
         lcd_puts(t24, "Help file /HELP/dm42help.htm is");
         lcd_puts(t24, "missing. Please, download it from");
@@ -324,19 +313,8 @@ int pgm_import_enter(const char * fpath, const char * fname, void * data) {
   return 0; // Continue in the file list
 }
 
-#endif
 
 
-
-typedef struct {
-  int pgm_cnt;
-  int pgm_indices[MAX_PGM_SEL];
-} pgm_import_sel_t;
-
-int pgm_import_enter(const char * fpath, const char * fname, void * data);
-int pgm_export_enter(const char * fpath, const char * fname, void * data);
-
-#ifndef TESTL
 
 int pgm_export_enter(const char * fpath, const char * fname, void * data) {
   
@@ -386,7 +364,6 @@ int pgm_export_enter(const char * fpath, const char * fname, void * data) {
   return MRET_EXIT;
 }
 
-#endif
 
 
 
@@ -488,6 +465,7 @@ int load_statefile(const char * fpath, const char * fname, void * data) {
   return 0;
 }
 
+#endif
 
 
 #define RESET_STATE_FILE_SIZE        0x38
@@ -522,6 +500,8 @@ int save_statefile(const char * fpath, const char * fname, void * data) {
   // Store the state file name
   set_reset_state_file(fp);
 
+  wait_for_key_release(-1);
+
   // Exit with appropriate code to force statefile save
   return MRET_SAVESTATE;
 }
@@ -535,7 +515,7 @@ int save_statefile(const char * fpath, const char * fname, void * data) {
 
 STATIC_ASSERT( (AUX_BUF_PGM_LIST_SIZE+AUX_BUF_SELS_SIZE) <= AUX_BUF_SIZE, "(AUX_BUF_PGM_LIST_SIZE+AUX_BUF_SELS_SIZE) <= AUX_BUF_SIZE");
 
-int select_programs(const char * title, int * pgm_indices, int * pgm_cnt);
+
 
 #ifndef TESTL
 
@@ -718,7 +698,6 @@ int select_programs(const char * title, int * pgm_indices, int * pgm_cnt) {
   return 1;
 }
 
-#endif
 
 
 
@@ -764,6 +743,7 @@ pgm_exp_fail:
 }
 
 
+#endif
 
 
 
@@ -835,13 +815,14 @@ const uint8_t mid_settings[] = {
 #ifndef TESTL
     MI_STACK_CONFIG,
 #endif
-    MI_DYNSTACKEXT,
-    //MI_DYNSTACK_MENU, // testing only
+    MI_F42CONF_MENU,
     0 }; // Terminator
 
 
-const uint8_t mid_dynstack_menu[] = {
+const uint8_t mid_f42conf[] = {
     MI_DYNSTACKEXT,
+    MI_F42C_MXSING,
+    MI_F42C_MXOVFL,
     0 }; // Terminator
 
 
@@ -901,13 +882,10 @@ int stack_menu_index() {
 
 
 
-const char* const dynstack_info[] = {
+const char* const f42conf_info[] = {
 // 123456789012345678901234567890|
-  " This option only enables the",
-  " >>> Dynamic Stack Extension <<<",
-  " Use the NSTK command to begin",
-  " Big Stack mode, and the 4STK",
-  " command to rtn to the XYZT stack.",
+  "NSTK activates Big Stack",
+  "4STK returns to the XYZT mode",
   NULL
 };
 
@@ -916,7 +894,7 @@ const smenu_t         MID_MENU = { "Setup",  mid_menu,   NULL, NULL };
 const smenu_t         MID_FILE = { "File",   mid_file,   NULL, NULL };
 const smenu_t        MID_PRINT = { "Printing", mid_print, NULL, NULL };
 const smenu_t     MID_SETTINGS = { "Settings",  mid_settings,  NULL, NULL};
-const smenu_t     MID_DYNSTACK = { "Dynamic Stack",  mid_dynstack_menu,  dynstack_info, NULL};
+const smenu_t      MID_F42CONF = { "Free42 configuration",  mid_f42conf,  f42conf_info, NULL};
 const smenu_t MID_STACK_CONFIG = { "Stack Layout", mid_stack, NULL, NULL};
 const smenu_t    MID_STATEFILE = { "Calculator State", mid_statefile, NULL, NULL};
 const smenu_t       MID_TOPBAR = { "Status Bar", mid_topbar, NULL, NULL};
@@ -1006,12 +984,19 @@ int run_menu_item(uint8_t line_id) {
   case MI_STACK_CONFIG:
     handle_menu(&MID_STACK_CONFIG,MENU_ADD,stack_menu_index());
     break;
-  case MI_DYNSTACK_MENU:
-    handle_menu(&MID_DYNSTACK, MENU_ADD, 0);
+  case MI_F42CONF_MENU:
+    handle_menu(&MID_F42CONF, MENU_ADD, 0);
     break;
   case MI_DYNSTACKEXT:
     set_dynstackext(!get_dynstackext());
     break;
+  case MI_F42C_MXSING:
+    set_f42conf_mxsing(!get_f42conf_mxsing());
+    break;
+  case MI_F42C_MXOVFL:
+    set_f42conf_mxovfl(!get_f42conf_mxovfl());
+    break;
+
   case MI_STACK_XYZTL:
     set_stack_layout(STACK_XYZTL);
     ret = MRET_EXIT;
@@ -1156,8 +1141,10 @@ const char * menu_line_str(uint8_t line_id, char * s, const int slen) {
   case MI_STACK_CONFIG:
     ln = layout_str(s, "Stack Layout");              break;
 
-  case MI_DYNSTACK_MENU:ln ="Dynamic Stack >";       break;
+  case MI_F42CONF_MENU: ln = "Free42 Configuration >"; break;
   case MI_DYNSTACKEXT:  ln = opt_str(s, " Dynamic Stack Extension", get_dynstackext()); break;
+  case MI_F42C_MXSING:  ln = opt_str(s, " Singular Matrix Error",   get_f42conf_mxsing()); break;
+  case MI_F42C_MXOVFL:  ln = opt_str(s, " Matrix Overflow Error",   get_f42conf_mxovfl()); break;
 
   case MI_STACK_XYZTL:  ln = orb_str(s, "XYZTL", get_stack_layout() == STACK_XYZTL); break;
   case MI_STACK_XYZTA:  ln = orb_str(s, "XYZTA", get_stack_layout() == STACK_XYZTA); break;

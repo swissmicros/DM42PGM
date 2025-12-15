@@ -721,20 +721,20 @@ const char alpha_lower_transl[] = "_" // code 0 unused
 
 const char alpha_shift_upper_transl[] = "_" // code 0 unused
   "ABCDEF"
-  "GHIJKL"
+  "G__JKL"
    "_MNO_"
-   "_789/"
-   "_456*"
+   "_789@"
+   "_456@"
    "_123-"
    "_0.?+";
 
 
 const char alpha_shift_lower_transl[] = "_" // code 0 unused
   "abcdef"
-  "ghijkl"
+  "g__jkl"
    "_mno_"
-   "_789/"
-   "_456*"
+   "_789@"
+   "_456@"
    "_123-"
    "_0.?+";
 
@@ -1196,6 +1196,8 @@ int statefile_putc(int ic, FILE *stream) {
 
 #define STATCONFIG_MAGIC 0xbb40e64d
 #define STATCONFIG_DYNSTK 1
+#define STATCONFIG_MXSING 2
+#define STATCONFIG_MXOVFL 4
 
 
 uint32_t* stat_config_ptr() {
@@ -2161,6 +2163,8 @@ int is_disp_main_menu() {
 }
 
 
+// Statconfig vals access
+
 void sync_dynstackext(int val) {
   if (val != core_settings.allow_big_stack) {
     core_settings.allow_big_stack = val;
@@ -2174,13 +2178,43 @@ int get_dynstackext() {
   return core_settings.allow_big_stack;
 }
 
-
 void set_dynstackext(int val) {
   set_stat_config_bit(STATCONFIG_DYNSTK, val);
   sync_dynstackext(val);
 }
 
 
+
+
+int get_f42conf_mxsing() {
+  int val = get_stat_config_bit(STATCONFIG_MXSING);
+  core_settings.matrix_singularmatrix = val;
+  return val;
+}
+
+void set_f42conf_mxsing(int val) {
+  set_stat_config_bit(STATCONFIG_MXSING, val);
+  get_f42conf_mxsing();
+}
+
+
+
+int get_f42conf_mxovfl() {
+  int val = get_stat_config_bit(STATCONFIG_MXOVFL);
+  core_settings.matrix_outofrange = val;
+  return val;
+}
+
+void set_f42conf_mxovfl(int val) {
+  set_stat_config_bit(STATCONFIG_MXOVFL, val);
+  get_f42conf_mxovfl();
+}
+
+
+
+
+
+// -------------------------------
 
 
 #define MAX_DATE_SEPARATORS   3
@@ -3667,6 +3701,9 @@ void program_main() {
   SET_ST(STAT_CLK_WKUP_ENABLE); // Enable wakeup each minute (for clock update)
 
   get_dynstackext(); // Sync the value with core
+  get_f42conf_mxsing();
+  get_f42conf_mxovfl();
+
 
   // --
   pgm_font_ix = lcd_toggleFontT(pgm_font_ix);
@@ -4116,14 +4153,10 @@ void program_main() {
       if ( transl )
         c = transl[key];
 
-      //if ( ANN(SHIFT) && (c >= '0' && c <= '9' ) ) {
-      //  key = nr_to_key(c-'0');
-      //} else {
-        if ( c != ALPHA_NO_TRANSL ) {
+      if ( c == '@' ) { c = ALPHA_NO_TRANSL; clr_shift(); }
+      if ( c != ALPHA_NO_TRANSL )
           key = 0x400 | c;
-        }
-      //}
-      //clr_shift();
+
     } else
       // Translate top row into function keys if function menu or alpha menu is activated
       if ( (key > MAX_KEY_NR && key <= MAX_FNKEY_NR) && is_menu_active ) {
@@ -4173,7 +4206,7 @@ void program_main() {
       if (ST(STAT_PGM_END)) continue;
 
       // Press key
-      printf("key press %i nomenu=%i\n",key,no_menu_key);
+      printf("== key press %i(%x) shift=%i nomenu=%i\n",key,key, ANN(SHIFT)!=0, no_menu_key);
       mark_region(MARK_42_KEYP);
       keep_running = core_keydown_ex(key, &enqueued, &repeat, no_menu_key);
       no_region();

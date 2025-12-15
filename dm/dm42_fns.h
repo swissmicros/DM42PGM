@@ -84,6 +84,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PGM_EXT      ".raw"
 #define MAX_PGM_SEL    64
 
+// Program import/export
+typedef struct {
+  int pgm_cnt;
+  int pgm_indices[MAX_PGM_SEL];
+} pgm_import_sel_t;
+
 extern FRESULT pgm_res;
 
 
@@ -159,6 +165,12 @@ char * get_stack_layout_str(char *s, int layout);
 
 int get_dynstackext();
 void set_dynstackext(int val);
+
+int get_f42conf_mxsing();
+void set_f42conf_mxsing(int val);
+
+int get_f42conf_mxovfl();
+void set_f42conf_mxovfl(int val);
 
 
 void copy_reset_state_filename(char *s, int maxlen);
